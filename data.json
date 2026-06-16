@@ -1,0 +1,74 @@
+{
+  "news": {
+    "news": [
+      { "id": "news1", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news2", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news3", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news4", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news5", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news6", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news7", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news8", "date": "", "title": "", "picture": "", "description": "" },
+      { "id": "news9", "date": "", "title": "", "picture": "", "description": "" }
+    ]
+  },
+  "kalendar": {
+    "events": [
+      { "id": "event1", "date": "", "title": "", "description": "" },
+      { "id": "event2", "date": "", "title": "", "description": "" },
+      { "id": "event3", "date": "", "title": "", "description": "" },
+      { "id": "event4", "date": "", "title": "", "description": "" },
+      { "id": "event5", "date": "", "title": "", "description": "" }
+    ]
+  },
+  "news_pages": {
+    "news-1": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-2": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-3": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-4": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-5": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-6": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-7": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-8": { "date": "", "title": "", "picture": "", "description": "" },
+    "news-9": { "date": "", "title": "", "picture": "", "description": "" }
+  },
+
+  "ekip": {
+    "members": [
+      { "id": "member1", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member2", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member3", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member4", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member5", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member6", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member7", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member8", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" },
+      { "id": "member9", "picture": "", "name": "", "occupation": "", "description": "", "group": "", "link": "" }
+    ]
+  },
+
+  "grupi": {
+    "main": [
+      { "id": "group1", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group2", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group3", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+       { "id": "group4", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group5", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group6", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+       { "id": "group7", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group8", "picture": "", "title": "", "description": "", "leader": "", "link": "" },
+      { "id": "group9", "picture": "", "title": "", "description": "", "leader": "", "link": "" }
+    ],
+    "info": [
+      { "id": "info-dance", "title": "", "description": "", "leader": "" },
+      { "id": "info-photo", "title": "", "description": "", "leader": "" },
+      { "id": "info-cinema", "title": "", "description": "", "leader": "" },
+      { "id": "info-singing", "title": "", "description": "", "leader": "" },
+      { "id": "info-theater", "title": "", "description": "", "leader": "" },
+      { "id": "info-writing", "title": "", "description": "", "leader": "" },
+      { "id": "info-literature", "title": "", "description": "", "leader": "" },
+      { "id": "info-music", "title": "", "description": "", "leader": "" },
+      { "id": "info-extra", "title": "", "description": "", "leader": "" }
+    ]
+  }
+}
