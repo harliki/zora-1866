@@ -52,61 +52,22 @@
   </nav>
 
   <div class="page-banner">
-  <div class="breadcrumb"><a href="index.html">Начало</a> /<a href="novini.html">Новини</a></div>
-  </div>
-  <div class="page-content">
-    <div class="history-text">
+    <div class="breadcrumb">
+      <a href="index.html">Начало</a> / <a href="novini.html">Новини</a>
+      <span id="breadcrumb-current"></span>
     </div>
-    <h2>Годишен концерт на читалищните състави</h2>
   </div>
-  
-  <div class="page-content">
-  
-    <div class="history-image-wrapper">
-      <img src="news/news7.jpg" alt="Годишен концерт">
-    </div>
-  
-    <div class="history-text">
-      <h3>Честване на 3 март в читалището</h3>
-      
-      <p>
-        В читалището се проведе тържествена програма, посветена на Националния празник –
-        3 март, която събра десетки жители и гости на града. Всички самодейни колективи
-        взеха участие в празничната вечер, подготвяйки специални изпълнения, вдъхновени
-        от българската история, традиции и дух.
-      </p>
-      
-      <p>
-        Събитието започна с изпълнение на химна и рецитал, посветен на Освобождението,
-        представен от младежката театрална трупа. След тях на сцената се изявиха
-        фолклорните певчески групи, които изпълниха възрожденски и патриотични песни,
-        създавайки силно емоционална атмосфера.
-      </p>
-      
-      <p>
-        Танцовият ансамбъл представи нова хореография, вдъхновена от българските
-        войнишки традиции, а детските състави изпълниха тематични танци и стихотворения,
-        които развълнуваха публиката. Всеки колектив допринесе със своя уникален стил,
-        превръщайки програмата в богата и разнообразна мозайка от изпълнения.
-      </p>
-      
-      <p>
-        Специален поздрав беше отправен към присъстващите ветерани и почетни членове
-        на читалището. Те бяха поканени на сцената и получиха цветя и благодарствени
-        адреси за своя принос към културния и обществения живот на общността.
-        Публиката ги посрещна с продължителни аплодисменти.
-      </p>
-      
-      <p>
-        Тържеството завърши с общо изпълнение на всички състави – символичен жест
-        на единство и признателност към българската история и героите, които са
-        положили основите на свободата. Честването на 3 март в читалището отново
-        доказа, че традициите са живи и продължават да обединяват поколенията.
-      </p>
 
+  <div class="page-content">
 
+    <h2 id="article-title">Зареждане…</h2>
+
+    <div class="history-image-wrapper" id="article-image-wrapper"></div>
+
+    <div class="history-text" id="article-content">
+      <p class="tl-loading">Зареждане на статията…</p>
     </div>
-  </div>
+
   </div>
 
   <footer>
@@ -158,16 +119,17 @@
 
     <!-- СОЦИАЛНИ БУТОНИ НАЙ-ДОЛУ -->
     <div class="footer-social-bottom">
-  <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank" rel="noopener noreferrer">
-    📘 Facebook
-  </a>
-  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-    🅾 Instagram
-  </a>
-  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-    ▶️ Youtube
-  </a>
-</div>
+      <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank"
+        rel="noopener noreferrer">
+        📘 Facebook
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        🅾 Instagram
+      </a>
+      <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+        ▶️ Youtube
+      </a>
+    </div>
 
     <div class="footer-bottom">
       &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
@@ -217,7 +179,7 @@
     })();
   </script>
   <script>
-   // Language
+    // Language
     const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
     let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
 
@@ -250,9 +212,9 @@
       location.reload();
     }
   </script>
-  
-  
-  
+
+
+
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
   <script>
     function initPage() {
@@ -260,6 +222,85 @@
       console.log(article);
     }
   </script>
-  </body>
-  
-  </html>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function () {
+      // ── Supabase project config ─────────────────────────────────
+      const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // ── Which row this page shows ───────────────────────────────
+      // Every news-N.html page is identical except for this one line.
+      // Matches the Supabase table "news_pages", columns:
+      //   id (text, e.g. "news-1")   date (text, e.g. "9.11.2001")
+      //   title (text)               picture (text, e.g. "news/news1.jpg")
+      //   description (text, plain text — no HTML)
+      const ARTICLE_ID = "news-7";
+
+      function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[c]));
+      }
+
+      // Dates are stored as plain text "D.M.YYYY" (e.g. "9.11.2001"),
+      // which new Date() parses unreliably — so parse manually.
+      function formatDate(dateStr) {
+        const parts = String(dateStr).split('.');
+        if (parts.length === 3) {
+          const [day, month, year] = parts.map(Number);
+          const d = new Date(year, month - 1, day);
+          if (!isNaN(d)) {
+            return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+        }
+        return escapeHtml(dateStr);
+      }
+
+      async function loadArticle() {
+        const titleEl = document.getElementById('article-title');
+        const imgWrap = document.getElementById('article-image-wrapper');
+        const contentEl = document.getElementById('article-content');
+        const crumbEl = document.getElementById('breadcrumb-current');
+
+        const { data: row, error } = await sb
+          .from('news_pages')
+          .select('*')
+          .eq('id', ARTICLE_ID)
+          .single();
+
+        if (error || !row) {
+          console.error('Error loading article:', error);
+          titleEl.textContent = 'Статията не е намерена';
+          contentEl.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на статията. Опитайте по-късно.</p>';
+          return;
+        }
+
+        document.title = `${row.title} – Възрожденско читалище „Зора – 1866“`;
+        titleEl.textContent = row.title;
+        if (crumbEl) crumbEl.textContent = ' / ' + row.title;
+
+        if (row.picture) {
+          imgWrap.innerHTML = `<img src="${escapeHtml(row.picture)}" alt="${escapeHtml(row.title)}">`;
+        }
+
+        contentEl.innerHTML = `
+        <p><strong>${formatDate(row.date)}</strong></p>
+        <p>${escapeHtml(row.description)}</p>
+      `;
+      }
+
+      window.addEventListener('load', loadArticle);
+    })();
+  </script>
+
+
+</body>
+
+</html>

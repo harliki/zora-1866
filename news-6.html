@@ -50,60 +50,23 @@
       <div class="nav-item"><a href="kontakti.html">Контакти</a></div>
     </div>
   </nav>
-<div class="page-banner">
-  <div class="breadcrumb"><a href="index.html">Начало</a> /<a href="novini.html">Новини</a></div>
-</div>
-<div class="page-content">
-  <div class="history-text">
-  </div>
-  <h2>Годишен концерт на читалищните състави</h2>
-</div>
-
-<div class="page-content">
-
-  <div class="history-image-wrapper">
-    <img src="news/news6.jpg" alt="Годишен концерт">
-  </div>
-
-  <div class="history-text">
-      <h3>Награди от Национален фолклорен преглед</h3>
-      
-      <p>
-        Танцовият ансамбъл на читалището постигна впечатляващ успех на Националния фолклорен преглед,
-        проведен в Пловдив, като завоюва <strong>две първи места</strong> в различни категории.
-        Отличията са резултат от месеци интензивни репетиции, прецизна подготовка и всеотдайна работа
-        както на участниците, така и на техните ръководители.
-      </p>
-      
-      <p>
-        В първата категория ансамбълът представи динамична хореография, съчетаваща традиционни стъпки
-        с модерни сценични решения. Изпълнението впечатли журито с енергия, синхрон и автентичност,
-        а публиката реагира с бурни аплодисменти. Втората награда беше присъдена за обработка на
-        фолклорен танц, отличаваща се с оригинална интерпретация и силно сценично присъствие.
-      </p>
-      
-      <p>
-        Ръководителите на ансамбъла споделиха, че подготовката е била изключително интензивна,
-        включваща ежедневни репетиции, работа върху техника, издръжливост и артистичност.
-        Участниците са показали дисциплина, постоянство и истинска любов към българския фолклор.
-      </p>
-      
-      <p>
-        Успехът в Пловдив е не само признание за труда на танцьорите, но и повод за гордост за цялата
-        читалищна общност. Ансамбълът вече е поканен да участва в няколко национални и международни
-        фестивала, което отваря нови възможности за развитие и популяризиране на местните таланти.
-      </p>
-      
-      <p>
-        Организаторите на прегледа поздравиха състава за високото ниво на изпълнение и подчертаха
-        значението на читалищата като пазители на традициите и двигатели на културния живот в страната.
-        За танцьорите това участие ще остане незабравимо преживяване и силна мотивация за бъдещи успехи.
-      </p>
-
-
-
+  <div class="page-banner">
+    <div class="breadcrumb">
+      <a href="index.html">Начало</a> / <a href="novini.html">Новини</a>
+      <span id="breadcrumb-current"></span>
     </div>
   </div>
+
+  <div class="page-content">
+
+    <h2 id="article-title">Зареждане…</h2>
+
+    <div class="history-image-wrapper" id="article-image-wrapper"></div>
+
+    <div class="history-text" id="article-content">
+      <p class="tl-loading">Зареждане на статията…</p>
+    </div>
+
   </div>
 
   <footer>
@@ -155,16 +118,17 @@
 
     <!-- СОЦИАЛНИ БУТОНИ НАЙ-ДОЛУ -->
     <div class="footer-social-bottom">
-  <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank" rel="noopener noreferrer">
-    📘 Facebook
-  </a>
-  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-    🅾 Instagram
-  </a>
-  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-    ▶️ Youtube
-  </a>
-</div>
+      <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank"
+        rel="noopener noreferrer">
+        📘 Facebook
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        🅾 Instagram
+      </a>
+      <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+        ▶️ Youtube
+      </a>
+    </div>
 
     <div class="footer-bottom">
       &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
@@ -215,41 +179,41 @@
   </script>
   <script>
     // Language
-      const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
-      let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
+    const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
+    let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
 
-      function highlightActiveLang() {
-        document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
-        document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
-      }
-      highlightActiveLang();
+    function highlightActiveLang() {
+      document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
+      document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
+    }
+    highlightActiveLang();
 
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-          pageLanguage: 'bg',
-          includedLanguages: 'en',
-          autoDisplay: false,
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-        }, 'google_translate_element');
-      }
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'bg',
+        includedLanguages: 'en',
+        autoDisplay: false,
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
+    }
 
-      function setGoogTransCookie(value) {
-        document.cookie = 'googtrans=' + value + '; path=/';
-        document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
-      }
+    function setGoogTransCookie(value) {
+      document.cookie = 'googtrans=' + value + '; path=/';
+      document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
+    }
 
-      function setLang(lang) {
-        if (lang === 'en') {
-          setGoogTransCookie('/bg/en');
-        } else {
-          setGoogTransCookie('/bg/bg');
-        }
-        location.reload();
+    function setLang(lang) {
+      if (lang === 'en') {
+        setGoogTransCookie('/bg/en');
+      } else {
+        setGoogTransCookie('/bg/bg');
       }
+      location.reload();
+    }
   </script>
-  
-  
-  
+
+
+
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
   <script>
     function initPage() {
@@ -257,6 +221,85 @@
       console.log(article);
     }
   </script>
-  </body>
-  
-  </html>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function () {
+      // ── Supabase project config ─────────────────────────────────
+      const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // ── Which row this page shows ───────────────────────────────
+      // Every news-N.html page is identical except for this one line.
+      // Matches the Supabase table "news_pages", columns:
+      //   id (text, e.g. "news-1")   date (text, e.g. "9.11.2001")
+      //   title (text)               picture (text, e.g. "news/news1.jpg")
+      //   description (text, plain text — no HTML)
+      const ARTICLE_ID = "news-6";
+
+      function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[c]));
+      }
+
+      // Dates are stored as plain text "D.M.YYYY" (e.g. "9.11.2001"),
+      // which new Date() parses unreliably — so parse manually.
+      function formatDate(dateStr) {
+        const parts = String(dateStr).split('.');
+        if (parts.length === 3) {
+          const [day, month, year] = parts.map(Number);
+          const d = new Date(year, month - 1, day);
+          if (!isNaN(d)) {
+            return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
+          }
+        }
+        return escapeHtml(dateStr);
+      }
+
+      async function loadArticle() {
+        const titleEl = document.getElementById('article-title');
+        const imgWrap = document.getElementById('article-image-wrapper');
+        const contentEl = document.getElementById('article-content');
+        const crumbEl = document.getElementById('breadcrumb-current');
+
+        const { data: row, error } = await sb
+          .from('news_pages')
+          .select('*')
+          .eq('id', ARTICLE_ID)
+          .single();
+
+        if (error || !row) {
+          console.error('Error loading article:', error);
+          titleEl.textContent = 'Статията не е намерена';
+          contentEl.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на статията. Опитайте по-късно.</p>';
+          return;
+        }
+
+        document.title = `${row.title} – Възрожденско читалище „Зора – 1866“`;
+        titleEl.textContent = row.title;
+        if (crumbEl) crumbEl.textContent = ' / ' + row.title;
+
+        if (row.picture) {
+          imgWrap.innerHTML = `<img src="${escapeHtml(row.picture)}" alt="${escapeHtml(row.title)}">`;
+        }
+
+        contentEl.innerHTML = `
+        <p><strong>${formatDate(row.date)}</strong></p>
+        <p>${escapeHtml(row.description)}</p>
+      `;
+      }
+
+      window.addEventListener('load', loadArticle);
+    })();
+  </script>
+
+
+</body>
+
+</html>

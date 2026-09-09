@@ -60,15 +60,10 @@
   <h2>Нашият екип</h2>
 </div>
 
-<div class="page-content">
-  <h2 class="section-title">Настоятелство и служители</h2>
-  <div class="team-grid" id="ekip-main"></div>
-  <h2 class="section-title" style="margin-top:3rem;">Ръководители на групи</h2>
-  <div class="team-grid" id="ekip-leaders"></div>
+<div class="memberts" id="members-container">
+  <p class="tl-loading">Зареждане на екипа…</p>
 </div>
-<div>
-    <p ></p>
-  </div>
+</div>
 
   <footer>
     <div class="footer-inner">
@@ -205,49 +200,68 @@
       }
       </script>
     
-  <script>
-    function renderMembers(members, containerId) {
-      const container = document.getElementById(containerId);
-      members.forEach(m => {
-        const hasLink = m.link && m.link !== "FALSE" && m.link !== "";
-
-        const card = document.createElement(hasLink ? "a" : "div");
-        card.classList.add("team-card");
-        if (hasLink) {
-          card.href = `grupi.html#${m.link}`;
-        }
-
-        card.innerHTML = `
-          <div class="avatar">
-            <img src="${m.picture}" alt="${m.name}">
-          </div>
-          <h3>${m.name}</h3>
-          <div class="role">${m.occupation}</div>
-          <p>${m.description}</p>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function initPage() {
-      fetch("https://script.google.com/macros/s/AKfycbxLSggWgoVAvfSyA06ghNFvjwQoG7b0cv-t4OdnQSWKLkhZY0y2e8mpYnJ_7U3WOil1/exec")
-        .then(res => res.json())
-        .then(data => {
-          const members = data.ekip.members;
-          const main = members.filter(m => m.group === "main");
-          const leaders = members.filter(m => m.group === "leaders");
-          renderMembers(main, "ekip-main");
-          renderMembers(leaders, "ekip-leaders");
-        })
-        .catch(err => console.error("Error loading ekip:", err));
-    }
-    window.onload = initPage;
-  </script>
 
 
       <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
         
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+  const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
+
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
+  }
+
+  function initPage() {
+    const container = document.getElementById("members-container");
+
+    sb
+      .from("members")
+      .select("*")
+      .order("name", { ascending: true })
+      .then(({ data: members, error }) => {
+        if (error) {
+          console.error("Error loading members:", error);
+          container.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на членовете. Опитайте по-късно.</p>';
+          return;
+        }
+
+        if (!members || members.length === 0) {
+          container.innerHTML = '<p class="tl-empty">В момента няма добавени членове.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+
+        members.forEach(member => {
+          const div = document.createElement("div");
+          div.classList.add("tl-item");
+
+          div.innerHTML = `
+              <img class="tl-photo" src="${escapeHtml(member.picture)}" alt="${escapeHtml(member.name)}">
+              <h3>${escapeHtml(member.name)}</h3>
+              <p class="tl-occupation">${escapeHtml(member.occupation)}</p>
+              <p>${escapeHtml(member["description-member"])}</p>
+            `;
+
+          container.appendChild(div);
+        });
+      });
+  }
+
+  window.addEventListener('load', initPage);
+</script>
 </body>
 
 </html>

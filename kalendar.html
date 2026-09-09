@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Културен календар – Възрожденско читалище „Зора – 1866"</title>
+  <title>Културен календар – Възрожденско читалище „Зора – 1866“</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
@@ -31,8 +31,8 @@
         <img class="logo-img" src="images/logo.png" alt="Зора лого">
       </div>
       <div class="header-text">
-        <h1><a href="index.html">Възрожденско читалище „Зора 1866" - Русе</a></h1>
-        <p>гр. Русе, ул. „Духовно възраждане" № 1</p>
+        <h1><a href="index.html">Възрожденско читалище „Зора 1866“ - Русе</a></h1>
+        <p>гр. Русе, ул. „Духовно възраждане“ № 1</p>
       </div>
     </div>
   </header>
@@ -52,19 +52,17 @@
     </div>
   </nav>
 
-<div class="page-banner">
-  
-  <h2>Културен календар</h2>
-</div>
+  <div class="page-banner">
+    <h2>Културен календар</h2>
+  </div>
 
-<div class="page-content">
-  <h2 class="section-title">Предстоящи събития</h2>
+  <div class="page-content">
+    <h2 class="section-title">Предстоящи събития</h2>
 
-  <!-- EMPTY timeline container (JS will fill this) -->
-  <div class="timeline" id="events-container"></div>
-</div>
-
-    <p ></p>
+    <!-- EMPTY timeline container (JS will fill this) -->
+    <div class="timeline" id="events-container">
+      <p class="tl-loading">Зареждане на събития…</p>
+    </div>
   </div>
 
   <footer>
@@ -129,9 +127,10 @@
     </div>
 
     <div class="footer-bottom">
-      &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
+      &copy; 2026 Читалище „Зора – 1866“ – гр. Русе | Всички права запазени
     </div>
   </footer>
+
   <script>
     const toggle = document.getElementById('nav-toggle');
     const navInner = document.getElementById('nav-inner');
@@ -157,8 +156,8 @@
       }
     }
   </script>
-  <script>
 
+  <script>
     function toggleDark() {
       document.body.classList.toggle('dark-mode');
       const btn = document.getElementById('btn-dark');
@@ -175,6 +174,7 @@
       }
     })();
   </script>
+
   <script>
     // Language
     const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
@@ -209,40 +209,74 @@
       location.reload();
     }
   </script>
-  
-  
-  
+
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-  function initPage() {
+  <script>
+    const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
 
-    fetch("https://script.google.com/macros/s/AKfycbxLSggWgoVAvfSyA06ghNFvjwQoG7b0cv-t4OdnQSWKLkhZY0y2e8mpYnJ_7U3WOil1/exec")
-      .then(res => res.json())
-      .then(data => {
-        const events = data.events;
-        const container = document.getElementById("events-container");
+    const { createClient } = supabase; // grabs createClient off the global `supabase` object
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY); // renamed so it doesn't clash with the global
 
-        events.forEach(ev => {
-          const div = document.createElement("div");
-          div.classList.add("tl-item");
+    // Escape any text before injecting into HTML, so event data
+    // from the database can never execute as script/markup.
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[c]));
+    }
 
-          div.innerHTML = `
-            <div class="tl-date">${ev.date}</div>
-            <h3>${ev.title}</h3>
-            <p>${ev.description}</p>
-          `;
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return escapeHtml(dateStr);
+      return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
 
-          container.appendChild(div);
+    function initPage() {
+      const container = document.getElementById("events-container");
+
+      sb
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true })
+        .then(({ data: events, error }) => {
+          if (error) {
+            console.error("Error loading events:", error);
+            container.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на събитията. Опитайте по-късно.</p>';
+            return;
+          }
+
+          if (!events || events.length === 0) {
+            container.innerHTML = '<p class="tl-empty">В момента няма предстоящи събития.</p>';
+            return;
+          }
+
+          container.innerHTML = '';
+
+          events.forEach(ev => {
+            const div = document.createElement("div");
+            div.classList.add("tl-item");
+
+            div.innerHTML = `
+              <div class="tl-date">${formatDate(ev.date)}</div>
+              <h3>${escapeHtml(ev.title)}</h3>
+              <p>${escapeHtml(ev.description)}</p>
+            `;
+
+            container.appendChild(div);
+          });
         });
-      });
-  }
+    }
 
-  window.onload = initPage;
-</script>
-
-
+    window.addEventListener('load', initPage);
+  </script>
 
 </body>
 

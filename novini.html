@@ -289,45 +289,86 @@
 
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  function initPage() {
-    fetch("https://script.google.com/macros/s/AKfycbwiR1kAD4v1rlXMxiSKvpXdZtrkAE4SHZOi6mBZ2sBT_ZSA4fORP0iygB7cD2rEfu8c/exec")
-      .then(res => res.json())
-      .then(data => {
-        const news = data.news;
-        const container = document.getElementById("news-grid");
+  const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
 
-        news.forEach((item, i) => {
-          const a = document.createElement("a");
-          a.href = `news-${i + 1}.html`;
-          a.classList.add("news-card");
-          if (i === 0) a.classList.add("highlight");
-          a.id = `news${i + 1}`;
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-          a.innerHTML = `
-  <div class="thumb"><img src="${item.picture || ''}" alt="${item.title || ''}"></div>
-  <div class="card-body">
-    <span class="date">${item.date}</span>
-    <h3>${item.title}</h3>
-    <p>${item.description}</p>
-  </div>
-`;
-          container.appendChild(a);
-        });
-      })
-      .catch(err => console.error("Error loading news:", err));
+  // ── Which article this page shows ─────────────────────────────
+  // This file is dedicated to one article: news-1
+  // Matches the Supabase table "news-pages", columns:
+  //   id (text, e.g. "news-1")   date (text, e.g. "9.11.2001")
+  //   title (text)               picture (text, e.g. "news/news1.jpg")
+  //   description (text, plain text — no HTML)
+  const ARTICLE_ID = "news-1";
+
+  function escapeHtml(str) {
+    return String(str ?? '').replace(/[&<>"']/g, c => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[c]));
   }
-  window.onload = initPage;
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
-<script>
-  function initPage() {
-    const news = siteData.novini.news;
-    console.log(news);
+
+  // Dates in this table are stored as plain text like "9.11.2001"
+  // (day.month.year), which new Date() would misread — parse manually.
+  function formatDate(dateStr) {
+    const parts = String(dateStr).split('.');
+    if (parts.length === 3) {
+      const [day, month, year] = parts.map(Number);
+      const d = new Date(year, month - 1, day);
+      if (!isNaN(d)) {
+        return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
+      }
+    }
+    return escapeHtml(dateStr);
   }
+
+  async function initArticle() {
+    const titleEl = document.getElementById('article-title');
+    const imgWrap = document.getElementById('article-image-wrapper');
+    const contentEl = document.getElementById('article-content');
+    const crumbEl = document.getElementById('breadcrumb-current');
+
+    const { data: article, error } = await sb
+      .from('news-pages')
+      .select('*')
+      .eq('id', ARTICLE_ID)
+      .single();
+
+    if (error || !article) {
+      console.error('Error loading article:', error);
+      titleEl.textContent = 'Статията не е намерена';
+      contentEl.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на статията. Опитайте по-късно.</p>';
+      return;
+    }
+
+    document.title = `${article.title} – Възрожденско читалище „Зора – 1866“`;
+    titleEl.textContent = article.title;
+    if (crumbEl) crumbEl.textContent = ' / ' + article.title;
+
+    if (article.picture) {
+      imgWrap.innerHTML = `<img src="${escapeHtml(article.picture)}" alt="${escapeHtml(article.title)}">`;
+    }
+
+    // description is plain text, not HTML, so it's escaped (not
+    // sanitized-and-injected) to keep any literal < or & safe.
+    contentEl.innerHTML = `
+        <p><strong>${formatDate(article.date)}</strong></p>
+        <p>${escapeHtml(article.description)}</p>
+      `;
+  }
+
+  window.addEventListener('load', initArticle);
 </script>
+
+
 
 </body>
 
