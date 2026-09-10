@@ -103,6 +103,18 @@
       margin-bottom: 10px;
       align-self: flex-start;
     }
+
+    .news-status {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      padding: 50px 0;
+      font-size: 14px;
+    }
+
+    .news-status.error {
+      color: var(--red-dark);
+    }
   </style>
 </head>
 
@@ -149,10 +161,12 @@
     <h2>Новини и събития</h2>
   </div>
 
-<div class="page-content">
-  <h2 class="section-title">Актуални новини</h2>
-  <div class="news-grid" id="news-grid"></div>
-</div>
+  <div class="page-content">
+    <h2 class="section-title">Актуални новини</h2>
+    <div class="news-grid" id="news-grid">
+      <div class="news-status" id="news-status">Зареждане на новини…</div>
+    </div>
+  </div>
 
   <footer>
     <div class="footer-inner">
@@ -190,18 +204,18 @@
         </iframe>
       </div>
     </div>
-  <div class="footer-social-bottom">
-    <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank"
-      rel="noopener noreferrer">
-      📘 Facebook
-    </a>
-    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-      🅾 Instagram
-    </a>
-    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-      ▶️ Youtube
-    </a>
-  </div>
+    <div class="footer-social-bottom">
+      <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank"
+        rel="noopener noreferrer">
+        📘 Facebook
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        🅾 Instagram
+      </a>
+      <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+        ▶️ Youtube
+      </a>
+    </div>
     <div class="footer-bottom">
       &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
     </div>
@@ -234,141 +248,130 @@
   </script>
   <script>
 
-  function toggleDark() {
-    document.body.classList.toggle('dark-mode');
-    const btn = document.getElementById('btn-dark');
-    const isDark = document.body.classList.contains('dark-mode');
-    btn.textContent = isDark ? '☀️ Светъл режим' : '🌙 Тъмен режим';
-    localStorage.setItem('darkMode', isDark ? '1' : '0');
-  }
-
-  (function () {
-    if (localStorage.getItem('darkMode') === '1') {
-      document.body.classList.add('dark-mode');
+    function toggleDark() {
+      document.body.classList.toggle('dark-mode');
       const btn = document.getElementById('btn-dark');
-      if (btn) btn.textContent = '☀️ Светъл режим';
+      const isDark = document.body.classList.contains('dark-mode');
+      btn.textContent = isDark ? '☀️ Светъл режим' : '🌙 Тъмен режим';
+      localStorage.setItem('darkMode', isDark ? '1' : '0');
     }
-  })();
-</script>
-<script>
-  // Language
-  const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
-  let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
 
-  function highlightActiveLang() {
-    document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
-    document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
-  }
-  highlightActiveLang();
-
-  function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-      pageLanguage: 'bg',
-      includedLanguages: 'en',
-      autoDisplay: false,
-      layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-    }, 'google_translate_element');
-  }
-
-  function setGoogTransCookie(value) {
-    document.cookie = 'googtrans=' + value + '; path=/';
-    document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
-  }
-
-  function setLang(lang) {
-    if (lang === 'en') {
-      setGoogTransCookie('/bg/en');
-    } else {
-      setGoogTransCookie('/bg/bg');
-    }
-    location.reload();
-  }
-</script>
-
-
-
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-  const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
-
-  const { createClient } = supabase;
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // ── Which article this page shows ─────────────────────────────
-  // This file is dedicated to one article: news-1
-  // Matches the Supabase table "news-pages", columns:
-  //   id (text, e.g. "news-1")   date (text, e.g. "9.11.2001")
-  //   title (text)               picture (text, e.g. "news/news1.jpg")
-  //   description (text, plain text — no HTML)
-  const ARTICLE_ID = "news-1";
-
-  function escapeHtml(str) {
-    return String(str ?? '').replace(/[&<>"']/g, c => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    }[c]));
-  }
-
-  // Dates in this table are stored as plain text like "9.11.2001"
-  // (day.month.year), which new Date() would misread — parse manually.
-  function formatDate(dateStr) {
-    const parts = String(dateStr).split('.');
-    if (parts.length === 3) {
-      const [day, month, year] = parts.map(Number);
-      const d = new Date(year, month - 1, day);
-      if (!isNaN(d)) {
-        return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
+    (function () {
+      if (localStorage.getItem('darkMode') === '1') {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('btn-dark');
+        if (btn) btn.textContent = '☀️ Светъл режим';
       }
+    })();
+  </script>
+  <script>
+    // Language
+    const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
+    let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
+
+    function highlightActiveLang() {
+      document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
+      document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
     }
-    return escapeHtml(dateStr);
-  }
+    highlightActiveLang();
 
-  async function initArticle() {
-    const titleEl = document.getElementById('article-title');
-    const imgWrap = document.getElementById('article-image-wrapper');
-    const contentEl = document.getElementById('article-content');
-    const crumbEl = document.getElementById('breadcrumb-current');
-
-    const { data: article, error } = await sb
-      .from('news-pages')
-      .select('*')
-      .eq('id', ARTICLE_ID)
-      .single();
-
-    if (error || !article) {
-      console.error('Error loading article:', error);
-      titleEl.textContent = 'Статията не е намерена';
-      contentEl.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на статията. Опитайте по-късно.</p>';
-      return;
-    }
-
-    document.title = `${article.title} – Възрожденско читалище „Зора – 1866“`;
-    titleEl.textContent = article.title;
-    if (crumbEl) crumbEl.textContent = ' / ' + article.title;
-
-    if (article.picture) {
-      imgWrap.innerHTML = `<img src="${escapeHtml(article.picture)}" alt="${escapeHtml(article.title)}">`;
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'bg',
+        includedLanguages: 'en',
+        autoDisplay: false,
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+      }, 'google_translate_element');
     }
 
-    // description is plain text, not HTML, so it's escaped (not
-    // sanitized-and-injected) to keep any literal < or & safe.
-    contentEl.innerHTML = `
-        <p><strong>${formatDate(article.date)}</strong></p>
-        <p>${escapeHtml(article.description)}</p>
-      `;
-  }
+    function setGoogTransCookie(value) {
+      document.cookie = 'googtrans=' + value + '; path=/';
+      document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
+    }
 
-  window.addEventListener('load', initArticle);
-</script>
+    function setLang(lang) {
+      if (lang === 'en') {
+        setGoogTransCookie('/bg/en');
+      } else {
+        setGoogTransCookie('/bg/bg');
+      }
+      location.reload();
+    }
+  </script>
 
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
+  <!-- Supabase: dynamic news -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://lbslahibezobuzyszvuv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7';
+
+    // "supabase" is the global from the CDN script; renaming our client avoids clobbering it
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const newsGrid = document.getElementById('news-grid');
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return '';
+      return d.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function renderCard(item) {
+      const highlightClass = item.is_highlight ? ' highlight' : '';
+      const img = item.image_url
+        ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">`
+        : '';
+      const tag = item.tag ? `<span class="tag">${escapeHtml(item.tag)}</span>` : '';
+      return `
+      <div class="news-card${highlightClass}">
+        <div class="thumb">${img}</div>
+        <div class="card-body">
+          ${tag}
+          <div class="date">${formatDate(item.event_date)}</div>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.excerpt)}</p>
+        </div>
+      </div>`;
+    }
+
+    function setStatus(message, isError) {
+      newsGrid.innerHTML = `<div class="news-status${isError ? ' error' : ''}">${escapeHtml(message)}</div>`;
+    }
+
+    async function loadNews() {
+      setStatus('Зареждане на новини…', false);
+
+      const { data, error } = await sb
+        .from('news')
+        .select('*')
+        .order('event_date', { ascending: false });
+
+      if (error) {
+        console.error('Supabase news fetch error:', error);
+        setStatus('Възникна грешка при зареждане на новините. Опитайте по-късно.', true);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setStatus('Все още няма публикувани новини.', false);
+        return;
+      }
+
+      newsGrid.innerHTML = data.map(renderCard).join('');
+    }
+
+    loadNews();
+  </script>
 
 </body>
 
