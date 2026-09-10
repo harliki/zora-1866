@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>История – Възрожденско читалище „Зора – 1866"</title>
+  <title>Новини – Възрожденско читалище „Зора – 1866“</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600&display=swap"
     rel="stylesheet" />
@@ -31,8 +31,8 @@
         <img class="logo-img" src="images/logo.png" alt="Зора лого">
       </div>
       <div class="header-text">
-        <h1><a href="index.html">Възрожденско читалище „Зора 1866" - Русе</a></h1>
-        <p>гр. Русе, ул. „Духовно възраждане" № 1</p>
+        <h1><a href="index.html">Възрожденско читалище „Зора 1866“ - Русе</a></h1>
+        <p>гр. Русе, ул. „Духовно възраждане“ № 1</p>
       </div>
     </div>
   </header>
@@ -59,15 +59,9 @@
   </div>
 
   <div class="page-content">
-
-    <h2 id="article-title">Зареждане…</h2>
-
-    <div class="history-image-wrapper" id="article-image-wrapper"></div>
-
-    <div class="history-text" id="article-content">
-      <p class="tl-loading">Зареждане на статията…</p>
-    </div>
-
+    <article class="article-detail" id="article-detail">
+      <div class="news-status" id="article-status">Зареждане…</div>
+    </article>
   </div>
 
   <footer>
@@ -132,9 +126,10 @@
     </div>
 
     <div class="footer-bottom">
-      &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
+      &copy; 2026 Читалище „Зора – 1866“ – гр. Русе | Всички права запазени
     </div>
   </footer>
+
   <script>
     const toggle = document.getElementById('nav-toggle');
     const navInner = document.getElementById('nav-inner');
@@ -160,8 +155,8 @@
       }
     }
   </script>
-  <script>
 
+  <script>
     function toggleDark() {
       document.body.classList.toggle('dark-mode');
       const btn = document.getElementById('btn-dark');
@@ -178,6 +173,7 @@
       }
     })();
   </script>
+
   <script>
     // Language
     const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
@@ -213,93 +209,70 @@
     }
   </script>
 
-
-
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+
+  <!-- ===== Supabase: load a single news item into #article-detail ===== -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    function initPage() {
-      const article = siteData.news_pages.news - 9;
-      console.log(article);
+    const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Table is called "pages" in Supabase, with columns: id, date, title, picture, description
+    const NEWS_TABLE = 'pages';
+
+    function formatDate(raw) {
+      // Handles both "9.11.2001" style strings and ISO dates gracefully
+      if (!raw) return '';
+      const d = new Date(raw);
+      if (isNaN(d)) return raw; // fall back to raw string if it doesn't parse
+      return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
     }
-  </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    (function () {
-      // ── Supabase project config ─────────────────────────────────
-      const SUPABASE_URL = "https://lbslahibezobuzyszvuv.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7";
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Derives "news-3" from a filename like "news-3.html" (works for any path/case)
+    function getIdFromFilename() {
+      const file = window.location.pathname.split('/').pop() || '';
+      const match = file.match(/^(news-\d+)\.html$/i);
+      return match ? match[1] : null;
+    }
 
-      // ── Which row this page shows ───────────────────────────────
-      // Every news-N.html page is identical except for this one line.
-      // Matches the Supabase table "news_pages", columns:
-      //   id (text, e.g. "news-1")   date (text, e.g. "9.11.2001")
-      //   title (text)               picture (text, e.g. "news/news1.jpg")
-      //   description (text, plain text — no HTML)
-      const ARTICLE_ID = "news-9";
+    async function loadArticle() {
+      const statusEl = document.getElementById('article-status');
+      const articleEl = document.getElementById('article-detail');
+      const breadcrumbEl = document.getElementById('breadcrumb-current');
 
-      function escapeHtml(str) {
-        return String(str ?? '').replace(/[&<>"']/g, c => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        }[c]));
+      const id = getIdFromFilename();
+
+      if (!id) {
+        statusEl.textContent = 'Няма избрана новина.';
+        return;
       }
 
-      // Dates are stored as plain text "D.M.YYYY" (e.g. "9.11.2001"),
-      // which new Date() parses unreliably — so parse manually.
-      function formatDate(dateStr) {
-        const parts = String(dateStr).split('.');
-        if (parts.length === 3) {
-          const [day, month, year] = parts.map(Number);
-          const d = new Date(year, month - 1, day);
-          if (!isNaN(d)) {
-            return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
-          }
-        }
-        return escapeHtml(dateStr);
+      const { data, error } = await supabaseClient
+        .from(NEWS_TABLE)
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !data) {
+        console.error(error);
+        statusEl.textContent = 'Новината не бе намерена.';
+        return;
       }
 
-      async function loadArticle() {
-        const titleEl = document.getElementById('article-title');
-        const imgWrap = document.getElementById('article-image-wrapper');
-        const contentEl = document.getElementById('article-content');
-        const crumbEl = document.getElementById('breadcrumb-current');
+      if (breadcrumbEl) breadcrumbEl.textContent = ' / ' + data.title;
+      document.title = data.title + ' – Новини – Възрожденско читалище „Зора – 1866“';
 
-        const { data: row, error } = await sb
-          .from('pages')
-          .select('*')
-          .eq('id', ARTICLE_ID)
-          .single();
-
-        if (error || !row) {
-          console.error('Error loading article:', error);
-          titleEl.textContent = 'Статията не е намерена';
-          contentEl.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на статията. Опитайте по-късно.</p>';
-          return;
-        }
-
-        document.title = `${row.title} – Възрожденско читалище „Зора – 1866“`;
-        titleEl.textContent = row.title;
-        if (crumbEl) crumbEl.textContent = ' / ' + row.title;
-
-        if (row.picture) {
-          imgWrap.innerHTML = `<img src="${escapeHtml(row.picture)}" alt="${escapeHtml(row.title)}">`;
-        }
-
-        contentEl.innerHTML = `
-        <p><strong>${formatDate(row.date)}</strong></p>
-        <p>${escapeHtml(row.description)}</p>
+      articleEl.innerHTML = `
+        <h1 class="article-title">${data.title}</h1>
+        <p class="article-date">${formatDate(data.date)}</p>
+        ${data.picture ? `<img class="article-image" src="${data.picture}" alt="${data.title}">` : ''}
+        <div class="article-description">${data.description || ''}</div>
       `;
-      }
+    }
 
-      window.addEventListener('load', loadArticle);
-    })();
+    loadArticle();
   </script>
-
 
 </body>
 

@@ -26,6 +26,8 @@
       transition: box-shadow .2s, transform .2s;
       display: flex;
       flex-direction: column;
+      text-decoration: none;
+      color: inherit;
     }
 
     .news-card:hover {
@@ -231,7 +233,6 @@
       });
     });
 
-    // Scroll to anchor with offset for sticky nav
     if (window.location.hash) {
       const target = document.querySelector(window.location.hash);
       if (target) {
@@ -247,7 +248,6 @@
     }
   </script>
   <script>
-
     function toggleDark() {
       document.body.classList.toggle('dark-mode');
       const btn = document.getElementById('btn-dark');
@@ -265,7 +265,6 @@
     })();
   </script>
   <script>
-    // Language
     const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
     let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
 
@@ -304,11 +303,13 @@
   <!-- Supabase: dynamic news -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://lbslahibezobuzyszvuv.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_-sw9T3vEYn55XRT7AjgplQ_6JgawzR7';
+    const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
 
-    // "supabase" is the global from the CDN script; renaming our client avoids clobbering it
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Real table name confirmed as "news"
+    const NEWS_TABLE = 'news';
 
     const newsGrid = document.getElementById('news-grid');
 
@@ -319,29 +320,33 @@
       }[m]));
     }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return '';
-      const d = new Date(dateStr);
-      if (isNaN(d)) return '';
-      return d.toLocaleDateString('bg-BG', { day: 'numeric', month: 'long', year: 'numeric' });
+    // Parses "DD.MM.YYYY" into a timestamp for sorting. Returns 0 (oldest) if unparseable.
+    function parseBgDate(dateStr) {
+      if (!dateStr) return 0;
+      const parts = String(dateStr).trim().split('.');
+      if (parts.length !== 3) return 0;
+      const [day, month, year] = parts.map(Number);
+      if (!day || !month || !year) return 0;
+      return new Date(year, month - 1, day).getTime();
     }
 
     function renderCard(item) {
-      const highlightClass = item.is_highlight ? ' highlight' : '';
-      const img = item.image_url
-        ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" loading="lazy">`
+      const img = item.picture
+        ? `<img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy">`
         : '';
-      const tag = item.tag ? `<span class="tag">${escapeHtml(item.tag)}</span>` : '';
+      // Table ids look like "news3" (no hyphen), but the actual files are named "news-3.html"
+      const numMatch = String(item.id).match(/\d+/);
+      const num = numMatch ? numMatch[0] : '';
+      const href = `news-${num}.html`;
       return `
-      <div class="news-card${highlightClass}">
-        <div class="thumb">${img}</div>
-        <div class="card-body">
-          ${tag}
-          <div class="date">${formatDate(item.event_date)}</div>
-          <h3>${escapeHtml(item.title)}</h3>
-          <p>${escapeHtml(item.excerpt)}</p>
-        </div>
-      </div>`;
+  <a class="news-card" href="${href}">
+    <div class="thumb">${img}</div>
+    <div class="card-body">
+      <div class="date">${escapeHtml(item.date)}</div>
+      <h3>${escapeHtml(item.title)}</h3>
+      <p>${escapeHtml(item.description)}</p>
+    </div>
+  </a>`;
     }
 
     function setStatus(message, isError) {
@@ -352,9 +357,8 @@
       setStatus('Зареждане на новини…', false);
 
       const { data, error } = await sb
-        .from('news')
-        .select('*')
-        .order('event_date', { ascending: false });
+        .from(NEWS_TABLE)
+        .select('*');
 
       if (error) {
         console.error('Supabase news fetch error:', error);
@@ -367,7 +371,10 @@
         return;
       }
 
-      newsGrid.innerHTML = data.map(renderCard).join('');
+      // Newest first, based on the DD.MM.YYYY text in the "date" column
+      const sorted = [...data].sort((a, b) => parseBgDate(b.date) - parseBgDate(a.date));
+
+      newsGrid.innerHTML = sorted.map(renderCard).join('');
     }
 
     loadNews();

@@ -45,7 +45,7 @@
     <div class="nav-item"><a href="kalendar.html">Културен календар</a></div>
     <div class="nav-item"><a href="grupi.html">Групи и клубове</a></div>
     <div class="nav-item"><a href="ekip.html">Екип</a></div>
-    <div class="nav-item"><a href="galeriya.html">Галерия</a></div>
+    <div class="nav-item"><a href="galeriya.html"class="active">Галерия</a></div>
     <div class="nav-item"><a href="istoria.html">История</a></div>
     <div class="nav-item"><a href="kontakti.html">Контакти</a></div>
     </div>
@@ -56,44 +56,7 @@
   </div>
   <div class="page-content">
     <h2 class="section-title">Снимки и моменти</h2>
-    <div class="gallery-grid">
-      <div class="gallery-item"><img src="gallery/gall1.jpg" alt="photo 1"></div>
-      <div class="gallery-item"><img src="gallery/gall2.jpg" alt="photo 2"></div>
-      <div class="gallery-item"><img src="gallery/gall3.jpg" alt="photo 3"></div>
-      <div class="gallery-item"><img src="gallery/gall4.jpg" alt="photo 4"></div>
-      <div class="gallery-item"><img src="gallery/gall5.jpg" alt="photo 5"></div>
-      <div class="gallery-item"><img src="gallery/gall6.jpg" alt="photo 6"></div>
-      <div class="gallery-item"><img src="gallery/gall7.jpg" alt="photo 7"></div>
-      <div class="gallery-item"><img src="gallery/gall8.jpg" alt="photo 8"></div>
-      <div class="gallery-item"><img src="gallery/gall9.jpg" alt="photo 9"></div>
-      <div class="gallery-item"><img src="gallery/gall10.jpg" alt="photo 10"></div>
-      <div class="gallery-item"><img src="gallery/gall11.jpg" alt="photo 11"></div>
-      <div class="gallery-item"><img src="gallery/gall12.jpg" alt="photo 12"></div>
-      <div class="gallery-item"><img src="gallery/gall13.jpg" alt="photo 13"></div>
-      <div class="gallery-item"><img src="gallery/gall14.jpg" alt="photo 14"></div>
-      <div class="gallery-item"><img src="gallery/gall15.jpg" alt="photo 15"></div>
-      <div class="gallery-item"><img src="gallery/gall16.jpg" alt="photo 16"></div>
-      <div class="gallery-item"><img src="gallery/gall17.jpg" alt="photo 17"></div>
-      <div class="gallery-item"><img src="gallery/gall18.jpg" alt="photo 18"></div>
-      <div class="gallery-item"><img src="gallery/gall19.jpg" alt="photo 19"></div>
-      <div class="gallery-item"><img src="gallery/gall20.jpg" alt="photo 20"></div>
-      <div class="gallery-item"><img src="gallery/gall21.jpg" alt="photo 21"></div>
-      <div class="gallery-item"><img src="gallery/gall22.jpg" alt="photo 22"></div>
-      <div class="gallery-item"><img src="gallery/gall23.jpg" alt="photo 23"></div>
-      <div class="gallery-item"><img src="gallery/gall24.jpg" alt="photo 24"></div>
-      <div class="gallery-item"><img src="gallery/gall25.jpg" alt="photo 25"></div>
-      <div class="gallery-item"><img src="gallery/gall26.jpg" alt="photo 26"></div>
-      <div class="gallery-item"><img src="gallery/gall27.jpg" alt="photo 27"></div>
-      <div class="gallery-item"><img src="gallery/gall28.jpg" alt="photo 28"></div>
-      <div class="gallery-item"><img src="gallery/gall29.jpg" alt="photo 29"></div>
-      <div class="gallery-item"><img src="gallery/gall30.jpg" alt="photo 30"></div>
-      <div class="gallery-item"><img src="gallery/gall31.jpg" alt="photo 31"></div>
-      <div class="gallery-item"><img src="gallery/gall32.jpg" alt="photo 32"></div>
-      <div class="gallery-item"><img src="gallery/gall33.jpg" alt="photo 33"></div>
-      <div class="gallery-item"><img src="gallery/gall34.jpg" alt="photo 34"></div>
-      <div class="gallery-item"><img src="gallery/gall35.jpg" alt="photo 35"></div>
-      <div class="gallery-item"><img src="gallery/gall36.jpg" alt="photo 36"></div>
-    </div>
+    <div class="gallery-grid" id="gallery-grid"></div>
   </div>
   <footer>
     <div class="footer-inner">
@@ -247,6 +210,76 @@
       lightboxImg.classList.remove("zoomed");
     }
   });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  // Extracts the trailing number from "gallery/gall12.jpg" -> 12, for correct numeric sort
+  function extractNumber(path) {
+    const match = String(path).match(/(\d+)(?=\.\w+$)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+ 
+  function wireLightbox() {
+    document.querySelectorAll('.gallery-item img').forEach(img => {
+      img.addEventListener('click', () => {
+        lightboxImg.src = img.src;
+        lightbox.classList.add('active');
+      });
+    });
+  }
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightboxImg) {
+      lightboxImg.classList.toggle('zoomed');
+    } else {
+      lightbox.classList.remove('active');
+      lightboxImg.classList.remove('zoomed');
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      lightbox.classList.remove('active');
+      lightboxImg.classList.remove('zoomed');
+    }
+  });
+
+  async function loadGallery() {
+    const grid = document.getElementById('gallery-grid');
+
+    const { data, error } = await sb.from('gallery').select('*');
+
+    if (error) {
+      console.error('Supabase gallery fetch error:', error);
+      return;
+    }
+    if (!data || data.length === 0) return;
+
+    const sorted = [...data].sort((a, b) => extractNumber(a.id) - extractNumber(b.id));
+
+    grid.innerHTML = sorted.map((item, i) => `
+      <div class="gallery-item">
+        <img src="${escapeHtml(item.id)}" alt="photo ${i + 1}" loading="lazy">
+      </div>
+    `).join('');
+
+    wireLightbox();
+  }
+
+  loadGallery();
 </script>
 </body>
 

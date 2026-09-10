@@ -49,7 +49,7 @@
   <nav>
     <div class="nav-inner" id="nav-inner">
       <button class="nav-toggle" id="nav-toggle" aria-label="Меню">☰</button>
-      <div class="nav-item"><a href="index.html">Начало</a></div>
+      <div class="nav-item"><a href="index.html"class="active">Начало</a></div>
       <div class="nav-item"><a href="novini.html">Новини</a></div>
       <div class="nav-item"><a href="kalendar.html">Културен календар</a></div>
       <div class="nav-item"><a href="grupi.html">Групи и клубове</a></div>
@@ -117,7 +117,7 @@
           <span>📍</span>
           <p>
             <strong>Адрес</strong>
-            <span № 1">гр. Русе 7000, ул. „Духовно възраждане" № 1</span>
+              <p><strong>Адрес</strong>гр. Русе 7000, ул. „Духовно възраждане" № 1</p>
           </p>
         </div>
         <div class="contact-item">
@@ -150,7 +150,7 @@
   </a>
 </div>
 
-    <div class="footer-bottom" – гр. Русе | Всички права запазени Зора – 1866" – Ruse | All rights reserved">
+    <div class="footer-bottom">
       &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
     </div>
   </footer>
@@ -250,7 +250,29 @@
   
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
+  }
+
+  // Parses "DD.MM.YYYY" into a timestamp for sorting. Returns 0 (oldest) if unparseable.
+  function parseBgDate(dateStr) {
+    if (!dateStr) return 0;
+    const parts = String(dateStr).trim().split('.');
+    if (parts.length !== 3) return 0;
+    const [day, month, year] = parts.map(Number);
+    if (!day || !month || !year) return 0;
+    return new Date(year, month - 1, day).getTime();
+  }
+
   function initSlider() {
     const track = document.getElementById('nsTrack');
     const dotsWrap = document.getElementById('nsDots');
@@ -293,36 +315,40 @@
     restartNews();
   }
 
-  function initPage() {
-    fetch("https://script.google.com/macros/s/AKfycbxLSggWgoVAvfSyA06ghNFvjwQoG7b0cv-t4OdnQSWKLkhZY0y2e8mpYnJ_7U3WOil1/exec")
-      .then(res => res.json())
-      .then(data => {
-        const news = data.news;
-        const track = document.getElementById("nsTrack");
+  async function initPage() {
+    const track = document.getElementById('nsTrack');
 
-        news.forEach((item, i) => {
-          const a = document.createElement("a");
-          a.classList.add("ns-card");
-          a.href = `news-${i + 1}.html`;
-          a.innerHTML = `
-          <div class="ns-thumb"><img src="${item.picture || ''}" alt=""></div>
-          <div class="ns-body">
-            <span class="ns-date">${item.date}</span>
-            <h3>${item.title}</h3>
-            <p>${item.description}</p>
-          </div>
-        `;
-          track.appendChild(a);
-        });
+    const { data, error } = await sb.from('news').select('*');
 
-        initSlider();
-      })
-      .catch(err => console.error("Error loading news:", err));
+    if (error) {
+      console.error('Supabase news fetch error:', error);
+      return;
+    }
+    if (!data || data.length === 0) return;
+
+    // Newest first, same sort as novini.html
+    const sorted = [...data].sort((a, b) => parseBgDate(b.date) - parseBgDate(a.date));
+
+    sorted.forEach((item, i) => {
+      const a = document.createElement('a');
+      a.classList.add('ns-card');
+      a.href = `news-${i + 1}.html`;
+      a.innerHTML = `
+        <div class="ns-thumb"><img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy"></div>
+        <div class="ns-body">
+          <span class="ns-date">${escapeHtml(item.date)}</span>
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.description)}</p>
+        </div>
+      `;
+      track.appendChild(a);
+    });
+
+    initSlider();
   }
 
   window.onload = initPage;
 </script>
-
 </body>
 
 </html>

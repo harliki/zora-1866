@@ -43,7 +43,7 @@
       <div class="nav-item"><a href="index.html">Начало</a></div>
       <div class="nav-item"><a href="novini.html">Новини</a></div>
       <div class="nav-item"><a href="kalendar.html">Културен календар</a></div>
-      <div class="nav-item"><a href="grupi.html">Групи и клубове</a></div>
+      <div class="nav-item"><a href="grupi.html"class="active">Групи и клубове</a></div>
       <div class="nav-item"><a href="ekip.html">Екип</a></div>
       <div class="nav-item"><a href="galeriya.html">Галерия</a></div>
       <div class="nav-item"><a href="istoria.html">История</a></div>
@@ -183,50 +183,68 @@
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  function initPage() {
-    fetch("https://script.google.com/macros/s/AKfycbxLSggWgoVAvfSyA06ghNFvjwQoG7b0cv-t4OdnQSWKLkhZY0y2e8mpYnJ_7U3WOil1/exec")
-      .then(res => res.json())
-      .then(data => {
-        // Cards grid
-        const main = data.grupi.main;
-        const gridContainer = document.getElementById("groups-grid");
+  const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        main.forEach(item => {
-          const a = document.createElement("a");
-          a.classList.add("group-card");
-          a.href = `#${item.link}`;
-          a.innerHTML = `
-            <div class="gc-photo"><img src="${item.picture}" alt="${item.title}"></div>
-            <div class="gc-body">
-              <h3>${item.title}</h3>
-              <p>${item.description}</p>
-            </div>
-          `;
-          gridContainer.appendChild(a);
-        });
-
-        // Detail info sections
-        const info = data.grupi.info;
-        const infoContainer = document.getElementById("groups-info-container");
-
-        info.forEach(item => {
-          const div = document.createElement("div");
-          div.id = item.id;
-          div.classList.add("group-info");
-          div.innerHTML = `
-            <h3>${item.title}</h3>
-            <p>${item.description}</p>
-            <p><strong>Ръководител:</strong> ${item.leader}</p>
-          `;
-          infoContainer.appendChild(div);
-        });
-      })
-      .catch(err => console.error("Error loading groups:", err));
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m]));
   }
+
+  async function initPage() {
+    const gridContainer = document.getElementById('groups-grid');
+    const infoContainer = document.getElementById('groups-info-container');
+
+    const [mainRes, infoRes] = await Promise.all([
+      sb.from('groups-main').select('*'),
+      sb.from('groups-info').select('*')
+    ]);
+
+    if (mainRes.error) {
+      console.error('Supabase groups-main fetch error:', mainRes.error);
+      return;
+    }
+    if (infoRes.error) {
+      console.error('Supabase groups-info fetch error:', infoRes.error);
+      return;
+    }
+
+    // Cards grid
+    (mainRes.data || []).forEach(item => {
+      const a = document.createElement('a');
+      a.classList.add('group-card');
+      a.href = `#${item.link}`;
+      a.innerHTML = `
+        <div class="gc-photo"><img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}"></div>
+        <div class="gc-body">
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.description)}</p>
+        </div>
+      `;
+      gridContainer.appendChild(a);
+    });
+
+    // Detail info sections
+    (infoRes.data || []).forEach(item => {
+      const div = document.createElement('div');
+      div.id = item.id;
+      div.classList.add('group-info');
+      div.innerHTML = `
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.description)}</p>
+        <p><strong>Ръководител:</strong> ${escapeHtml(item.leader)}</p>
+      `;
+      infoContainer.appendChild(div);
+    });
+  }
+
   window.onload = initPage;
 </script>
-
 </body>
 
 </html>
