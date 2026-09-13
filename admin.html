@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="bg">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel – Читалище „Зора 1866“</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Rubik:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --red: #506d37;
+            --red-dark: #589634;
+            --gold: #c8a84b;
+            --gold-light: #e2c97e;
+            --cream: #fdf6ec;
+            --text: #1a1a1a;
+            --muted: #555;
+            --card-bg: #ffffff;
+            --card-bg-dark: #1e1e1e;
+            --letter-color: #8bc34a;
+        }
+
+        body {
+            font-family: 'Rubik', sans-serif;
+            font-size: 16px;
+            color: var(--text);
+            background: #f4f4f4;
+            margin: 0;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* ---------- Login ---------- */
+        .site-lock {
+            position: fixed;
+            inset: 0;
+            background: rgba(20, 30, 15, 0.55);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .login-box {
+            background: #fff;
+            padding: 34px;
+            border-radius: 10px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-top: 4px solid var(--gold);
+        }
+
+        .login-box h2 {
+            margin: 0 0 6px;
+            color: var(--red-dark);
+            font-size: 20px;
+        }
+
+        .login-box input {
+            padding: 10px 12px;
+            border: 1px solid #d9cdb8;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Rubik', sans-serif;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(200, 168, 75, .18);
+        }
+
+        .login-box button {
+            padding: 11px;
+            border: none;
+            border-radius: 6px;
+            background: var(--red);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+        }
+
+        .login-box button:hover {
+            background: var(--red-dark);
+        }
+
+        #login-error {
+            color: #c0392b;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ---------- Topbar ---------- */
+        .topbar {
+            background: var(--red-dark);
+            color: #fff;
+            font-size: 13px;
+            padding: 8px 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .topbar-btn {
+            background: rgba(255, 255, 255, .14);
+            border: none;
+            border-radius: 3px;
+            padding: 4px 12px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: .3px;
+            transition: background .2s;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .topbar-btn:hover {
+            background: rgba(255, 255, 255, .26);
+        }
+
+        /* ---------- Header ---------- */
+        header {
+            background: var(--cream);
+            border-bottom: 4px solid var(--gold);
+            padding: 18px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--red-dark);
+            margin: 0;
+        }
+
+        header p {
+            font-size: 13px;
+            color: var(--muted);
+            margin: 2px 0 0;
+        }
+
+        .logout-btn {
+            border: none;
+            background: var(--red);
+            color: #fff;
+            padding: 9px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+        }
+
+        .logout-btn:hover {
+            background: var(--red-dark);
+        }
+
+        /* ---------- Tabs ---------- */
+        nav.tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: var(--red);
+            padding: 10px 24px;
+            border-top: 3px solid var(--gold);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        nav.tabs button {
+            border: none;
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            padding: 9px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: .3px;
+            font-weight: 600;
+            transition: background .18s;
+        }
+
+        nav.tabs button:hover {
+            background: rgba(255, 255, 255, .22);
+        }
+
+        nav.tabs button.active {
+            background: var(--gold);
+            color: #2b2200;
+        }
+
+        main {
+            max-width: 780px;
+            margin: 28px auto;
+            padding: 0 16px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* ---------- Cards ---------- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #e8e0d0;
+            border-top: 3px solid var(--gold);
+            border-radius: 8px;
+            padding: 22px;
+            margin-bottom: 22px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 17px;
+            color: var(--red-dark);
+            border-bottom: 2px solid var(--gold-light);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--red-dark);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin: 12px 0 5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9cdb8;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Rubik', sans-serif;
+            background: #fff;
+            color: var(--text);
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(200, 168, 75, .18);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            display: block;
+            margin-top: 4px;
+            font-size: 13px;
+        }
+
+        .thumb {
+            display: block;
+            max-width: 150px;
+            max-height: 100px;
+            border-radius: 6px;
+            margin-top: 8px;
+            object-fit: cover;
+            border: 1px solid #e8e0d0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        button.primary {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            background: var(--red);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+        }
+
+        button.primary:hover {
+            background: var(--red-dark);
+        }
+
+        button.secondary {
+            padding: 10px 18px;
+            border: 1px solid #d9cdb8;
+            border-radius: 5px;
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+
+        .status {
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 16px;
+            font-weight: 500;
+        }
+
+        .status.ok {
+            color: var(--red-dark);
+        }
+
+        .status.err {
+            color: #c00;
+        }
+
+        ul.item-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        li.row-item {
+            border-bottom: 1px solid #eee;
+            padding: 14px 0;
+        }
+
+        li.row-item:last-child {
+            border-bottom: none;
+        }
+
+        .row-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .row-summary strong {
+            color: var(--red-dark);
+        }
+
+        .row-id {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .row-actions button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--red-dark);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+
+        .row-actions .del-btn {
+            color: #c00;
+        }
+
+        .edit-area {
+            margin-top: 12px;
+            background: var(--cream);
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .gallery-item {
+            position: relative;
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e8e0d0;
+        }
+
+        .gallery-item button {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            border: none;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* ---------- Dark mode ---------- */
+        body.dark-mode {
+            background: #111;
+            color: #e8e8e8;
+            --muted: #bbb;
+            --text: #e8e8e8;
+        }
+
+        body.dark-mode .topbar {
+            background: #1a2e0d;
+        }
+
+        body.dark-mode header {
+            background: #1c1c1c;
+            border-bottom-color: var(--gold);
+        }
+
+        body.dark-mode header h1 {
+            color: var(--letter-color);
+        }
+
+        body.dark-mode header p {
+            color: #bbb;
+        }
+
+        body.dark-mode nav.tabs {
+            background: #1a2e0d;
+        }
+
+        body.dark-mode nav.tabs button {
+            background: rgba(255, 255, 255, .08);
+        }
+
+        body.dark-mode nav.tabs button.active {
+            background: var(--gold);
+            color: #1a1a1a;
+        }
+
+        body.dark-mode .card {
+            background: var(--card-bg-dark);
+            border-color: #333;
+        }
+
+        body.dark-mode .card h2 {
+            color: var(--letter-color);
+            border-bottom-color: #444;
+        }
+
+        body.dark-mode label {
+            color: var(--letter-color);
+        }
+
+        body.dark-mode input[type="text"],
+        body.dark-mode textarea {
+            background: #252525;
+            border-color: #444;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .row-summary strong {
+            color: var(--letter-color);
+        }
+
+        body.dark-mode li.row-item {
+            border-bottom-color: #333;
+        }
+
+        body.dark-mode .edit-area {
+            background: #252525;
+        }
+
+        body.dark-mode .row-actions button {
+            color: var(--letter-color);
+        }
+
+        body.dark-mode button.secondary {
+            background: #252525;
+            border-color: #444;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .thumb,
+        body.dark-mode .gallery-item img {
+            border-color: #444;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-screen" class="site-lock">
+        <div class="login-box">
+            <h2>Admin вход</h2>
+            <input type="email" id="email" placeholder="Имейл" autocomplete="username">
+            <input type="password" id="password" placeholder="Парола" autocomplete="current-password"
+                onkeydown="if(event.key === 'Enter') login();">
+            <button onclick="login()">Влез</button>
+            <div id="login-error">Грешен имейл или парола.</div>
+        </div>
+    </div>
+
+    <div class="topbar">
+        <button class="topbar-btn" id="btn-dark" onclick="toggleDark()">🌙 Тъмен режим</button>
+    </div>
+
+    <header>
+        <div>
+            <h1>Административен панел</h1>
+            <p>Читалище „Зора 1866“ – Русе</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">Изход</button>
+    </header>
+
+    <nav class="tabs" id="tabs"></nav>
+
+    <main id="sections"></main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const STORAGE_BUCKET = 'media';
+
+        // ---------- Dark mode ----------
+        function toggleDark() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('btn-dark');
+            const isDark = document.body.classList.contains('dark-mode');
+            btn.textContent = isDark ? '☀️ Светъл режим' : '🌙 Тъмен режим';
+            localStorage.setItem('darkMode', isDark ? '1' : '0');
+        }
+        (function () {
+            if (localStorage.getItem('darkMode') === '1') {
+                document.body.classList.add('dark-mode');
+                const btn = document.getElementById('btn-dark');
+                if (btn) btn.textContent = '☀️ Светъл режим';
+            }
+        })();
+
+        // ---------- Table configuration ----------
+        const TABLES = {
+            events: {
+                label: 'Събития',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'date', label: 'Дата', type: 'text' },
+                    { name: 'title', label: 'Заглавие', type: 'text' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                ]
+            },
+            'groups-info': {
+                label: 'Групи - инфо',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'title', label: 'Заглавие', type: 'text' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                    { name: 'leader', label: 'Ръководител', type: 'text' },
+                ]
+            },
+            'groups-main': {
+                label: 'Групи - основно',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'picture', label: 'Снимка', type: 'image' },
+                    { name: 'title', label: 'Заглавие', type: 'text' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                    { name: 'leader', label: 'Ръководител', type: 'text' },
+                    { name: 'link', label: 'Линк', type: 'text' },
+                ]
+            },
+            members: {
+                label: 'Членове',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'picture', label: 'Снимка', type: 'image' },
+                    { name: 'name', label: 'Име', type: 'text' },
+                    { name: 'occupation', label: 'Занятие', type: 'text' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                    { name: 'group', label: 'Група', type: 'text' },
+                    { name: 'link', label: 'Линк', type: 'text' },
+                ]
+            },
+            news: {
+                label: 'Новини',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'date', label: 'Дата', type: 'text' },
+                    { name: 'title', label: 'Заглавие', type: 'text' },
+                    { name: 'picture', label: 'Снимка', type: 'image' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                ]
+            },
+            pages: {
+                label: 'Статии',
+                fields: [
+                    { name: 'id', label: 'ID', type: 'text', pk: true },
+                    { name: 'date', label: 'Дата', type: 'text' },
+                    { name: 'title', label: 'Заглавие', type: 'text' },
+                    { name: 'picture', label: 'Снимка', type: 'image' },
+                    { name: 'description', label: 'Описание', type: 'textarea' },
+                ]
+            },
+        };
+
+        const rowCache = {}; // tableKey -> { pkValue: rowObject }
+
+        // ---------- Auth ----------
+        async function checkLogin() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) unlockSite();
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const errorBox = document.getElementById('login-error');
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                errorBox.style.display = 'block';
+                return;
+            }
+            errorBox.style.display = 'none';
+            unlockSite();
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        function unlockSite() {
+            const loginScreen = document.getElementById('login-screen');
+            if (loginScreen) loginScreen.remove();
+            buildUI();
+        }
+
+        // ---------- Build tabs + sections ----------
+        function buildUI() {
+            const tabsEl = document.getElementById('tabs');
+            const sectionsEl = document.getElementById('sections');
+
+            const keys = Object.keys(TABLES).concat(['gallery']);
+
+            keys.forEach((key) => {
+                const label = key === 'gallery' ? 'Галерия' : TABLES[key].label;
+
+                const btn = document.createElement('button');
+                btn.textContent = label;
+                btn.onclick = () => showSection(key);
+                btn.id = `tab-${key}`;
+                tabsEl.appendChild(btn);
+
+                const section = document.createElement('div');
+                section.className = 'section';
+                section.id = `section-${key}`;
+                sectionsEl.appendChild(section);
+
+                if (key === 'gallery') {
+                    buildGallerySection();
+                } else {
+                    buildTableSection(key);
+                }
+            });
+
+            showSection(keys[0]);
+        }
+
+        function showSection(key) {
+            document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === `section-${key}`));
+            document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.id === `tab-${key}`));
+        }
+
+        // ---------- Generic table CRUD ----------
+        function buildTableSection(tableKey) {
+            const cfg = TABLES[tableKey];
+            const section = document.getElementById(`section-${tableKey}`);
+            section.innerHTML = `
+                <div class="card">
+                    <h2>Добави ново — ${cfg.label}</h2>
+                    <div id="add-form-${tableKey}"></div>
+                </div>
+                <div class="card">
+                    <h2>Съществуващи записи</h2>
+                    <ul class="item-list" id="list-${tableKey}"></ul>
+                </div>
+            `;
+            renderAddForm(tableKey);
+            loadRows(tableKey);
+        }
+
+        function renderAddForm(tableKey) {
+            const cfg = TABLES[tableKey];
+            const container = document.getElementById(`add-form-${tableKey}`);
+            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, '', tableKey, 'add')).join('');
+            container.innerHTML = `
+                ${fieldsHtml}
+                <div class="row"><button class="primary" onclick="submitAdd('${tableKey}')">Добави</button></div>
+                <div class="status" id="add-status-${tableKey}"></div>
+            `;
+        }
+
+        function fieldHtml(f, value, tableKey, mode) {
+            const id = `field-${tableKey}-${mode}-${f.name}`;
+            if (f.type === 'textarea') {
+                return `<label>${f.label}</label><textarea id="${id}">${escapeHtml(value || '')}</textarea>`;
+            }
+            if (f.type === 'image') {
+                const preview = value ? `<img src="${escapeAttr(value)}" class="thumb">` : '';
+                return `<label>${f.label}</label>${preview}<input type="file" accept="image/*" id="${id}" data-current="${escapeAttr(value || '')}">`;
+            }
+            const disabled = (f.pk && mode.startsWith('edit')) ? 'disabled' : '';
+            return `<label>${f.label}</label><input type="text" id="${id}" value="${escapeAttr(value || '')}" ${disabled}>`;
+        }
+
+        async function uploadIfFile(tableKey, field, mode) {
+            const input = document.getElementById(`field-${tableKey}-${mode}-${field.name}`);
+            if (!input) return null;
+            if (input.files && input.files.length > 0) {
+                const file = input.files[0];
+                const path = `${tableKey}/${Date.now()}-${file.name}`;
+                const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, file);
+                if (error) throw error;
+                const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+                return data.publicUrl;
+            }
+            return input.dataset.current || null;
+        }
+
+        async function submitAdd(tableKey) {
+            const cfg = TABLES[tableKey];
+            const status = document.getElementById(`add-status-${tableKey}`);
+            status.textContent = 'Запазване...';
+            status.className = 'status';
+            try {
+                const row = {};
+                for (const f of cfg.fields) {
+                    if (f.type === 'image') {
+                        row[f.name] = await uploadIfFile(tableKey, f, 'add');
+                    } else {
+                        const el = document.getElementById(`field-${tableKey}-add-${f.name}`);
+                        row[f.name] = el.value.trim();
+                    }
+                }
+                const pkField = cfg.fields.find(f => f.pk);
+                if (pkField && !row[pkField.name]) {
+                    status.textContent = 'ID е задължителен.';
+                    status.className = 'status err';
+                    return;
+                }
+                const { error } = await supabaseClient.from(tableKey).insert(row);
+                if (error) throw error;
+                status.textContent = 'Добавено успешно.';
+                status.className = 'status ok';
+                renderAddForm(tableKey);
+                loadRows(tableKey);
+            } catch (err) {
+                status.textContent = 'Грешка: ' + err.message;
+                status.className = 'status err';
+            }
+        }
+
+        async function loadRows(tableKey) {
+            const cfg = TABLES[tableKey];
+            const list = document.getElementById(`list-${tableKey}`);
+            list.innerHTML = 'Зареждане...';
+            const { data, error } = await supabaseClient.from(tableKey).select('*');
+            if (error) { list.innerHTML = 'Грешка: ' + error.message; return; }
+
+            rowCache[tableKey] = {};
+            const pkField = cfg.fields.find(f => f.pk);
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<li>Няма записи.</li>';
+                return;
+            }
+
+            list.innerHTML = data.map(row => {
+                const pk = pkField ? row[pkField.name] : row.id;
+                rowCache[tableKey][pk] = row;
+                const titleField = cfg.fields.find(f => f.name === 'title' || f.name === 'name' || f.name === 'content');
+                const summary = titleField ? row[titleField.name] : pk;
+                return `
+                    <li class="row-item" id="row-${tableKey}-${escapeAttr(pk)}">
+                        <div class="row-summary">
+                            <div><strong>${escapeHtml(summary || '(без заглавие)')}</strong> <span class="row-id">${pkField ? '#' + escapeHtml(pk) : ''}</span></div>
+                            <div class="row-actions">
+                                <button onclick="toggleEdit('${tableKey}', '${escapeAttr(pk)}')">Редактирай</button>
+                                <button class="del-btn" onclick="deleteRow('${tableKey}', '${escapeAttr(pk)}')">Изтрий</button>
+                            </div>
+                        </div>
+                        <div class="edit-area" id="edit-${tableKey}-${escapeAttr(pk)}" style="display:none;"></div>
+                    </li>
+                `;
+            }).join('');
+        }
+
+        function toggleEdit(tableKey, pk) {
+            const cfg = TABLES[tableKey];
+            const area = document.getElementById(`edit-${tableKey}-${pk}`);
+            const isOpen = area.style.display !== 'none';
+            if (isOpen) {
+                area.style.display = 'none';
+                return;
+            }
+            const row = rowCache[tableKey][pk];
+            const mode = `edit-${pk}`;
+            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, row[f.name], tableKey, mode)).join('');
+            area.innerHTML = `
+                ${fieldsHtml}
+                <div class="row">
+                    <button class="secondary" onclick="toggleEdit('${tableKey}', '${pk}')">Отказ</button>
+                    <button class="primary" onclick="saveEdit('${tableKey}', '${pk}')">Запази</button>
+                </div>
+                <div class="status" id="edit-status-${tableKey}-${pk}"></div>
+            `;
+            area.style.display = 'block';
+        }
+
+        async function saveEdit(tableKey, pk) {
+            const cfg = TABLES[tableKey];
+            const mode = `edit-${pk}`;
+            const status = document.getElementById(`edit-status-${tableKey}-${pk}`);
+            status.textContent = 'Запазване...';
+            status.className = 'status';
+            try {
+                const updates = {};
+                for (const f of cfg.fields) {
+                    if (f.pk) continue;
+                    if (f.type === 'image') {
+                        updates[f.name] = await uploadIfFile(tableKey, f, mode);
+                    } else {
+                        const el = document.getElementById(`field-${tableKey}-${mode}-${f.name}`);
+                        updates[f.name] = el.value.trim();
+                    }
+                }
+                const pkField = cfg.fields.find(f => f.pk);
+                const eqCol = pkField ? pkField.name : 'id';
+                const { error } = await supabaseClient.from(tableKey).update(updates).eq(eqCol, pk);
+                if (error) throw error;
+                loadRows(tableKey);
+            } catch (err) {
+                status.textContent = 'Грешка: ' + err.message;
+                status.className = 'status err';
+            }
+        }
+
+        async function deleteRow(tableKey, pk) {
+            if (!confirm('Сигурен ли си, че искаш да изтриеш този запис?')) return;
+            const cfg = TABLES[tableKey];
+            const pkField = cfg.fields.find(f => f.pk);
+            const eqCol = pkField ? pkField.name : 'id';
+            const { error } = await supabaseClient.from(tableKey).delete().eq(eqCol, pk);
+            if (error) { alert('Грешка: ' + error.message); return; }
+            loadRows(tableKey);
+        }
+
+        // ---------- Gallery ----------
+        function buildGallerySection() {
+            const section = document.getElementById('section-gallery');
+            section.innerHTML = `
+                <div class="card">
+                    <h2>Добави снимка в галерията</h2>
+                    <input type="file" accept="image/*" id="gallery-upload">
+                    <div class="row"><button class="primary" onclick="submitGalleryUpload()">Качи</button></div>
+                    <div class="status" id="gallery-status"></div>
+                </div>
+                <div class="card">
+                    <h2>Снимки</h2>
+                    <div class="gallery-grid" id="gallery-grid"></div>
+                </div>
+            `;
+            loadGallery();
+        }
+
+        async function submitGalleryUpload() {
+            const input = document.getElementById('gallery-upload');
+            const status = document.getElementById('gallery-status');
+            if (!input.files || input.files.length === 0) {
+                status.textContent = 'Избери снимка първо.';
+                status.className = 'status err';
+                return;
+            }
+            status.textContent = 'Качване...';
+            status.className = 'status';
+            try {
+                const file = input.files[0];
+                const path = `gallery/${Date.now()}-${file.name}`;
+                const { error: upErr } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, file);
+                if (upErr) throw upErr;
+                const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+                const { error } = await supabaseClient.from('gallery').insert({ id: data.publicUrl });
+                if (error) throw error;
+                status.textContent = 'Добавено успешно.';
+                status.className = 'status ok';
+                input.value = '';
+                loadGallery();
+            } catch (err) {
+                status.textContent = 'Грешка: ' + err.message;
+                status.className = 'status err';
+            }
+        }
+
+        async function loadGallery() {
+            const grid = document.getElementById('gallery-grid');
+            grid.innerHTML = 'Зареждане...';
+            const { data, error } = await supabaseClient.from('gallery').select('*');
+            if (error) { grid.innerHTML = 'Грешка: ' + error.message; return; }
+            if (!data || data.length === 0) { grid.innerHTML = 'Няма снимки.'; return; }
+            grid.innerHTML = data.map(row => `
+                <div class="gallery-item">
+                    <img src="${escapeAttr(row.id)}">
+                    <button onclick="deleteGalleryItem('${escapeAttr(row.id)}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        async function deleteGalleryItem(id) {
+            if (!confirm('Изтриване на тази снимка от галерията?')) return;
+            const { error } = await supabaseClient.from('gallery').delete().eq('id', id);
+            if (error) { alert('Грешка: ' + error.message); return; }
+            loadGallery();
+        }
+
+        // ---------- Helpers ----------
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+        function escapeAttr(str) {
+            return escapeHtml(str).replace(/"/g, '&quot;');
+        }
+
+        checkLogin();
+    </script>
+</body>
+
+</html>
