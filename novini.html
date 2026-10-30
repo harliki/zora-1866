@@ -334,10 +334,8 @@
       const img = item.picture
         ? `<img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy">`
         : '';
-      // Table ids look like "news3" (no hyphen), but the actual files are named "news-3.html"
-      const numMatch = String(item.id).match(/\d+/);
-      const num = numMatch ? numMatch[0] : '';
-      const href = `news-${num}.html`;
+      // One shared article page; the item's own id picks the article
+      const href = `article.html?id=${encodeURIComponent(item.id)}`;
       return `
   <a class="news-card" href="${href}">
     <div class="thumb">${img}</div>

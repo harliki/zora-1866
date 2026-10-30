@@ -746,6 +746,18 @@
                 <div class="row"><button class="primary" onclick="submitAdd('${tableKey}')">Добави</button></div>
                 <div class="status" id="add-status-${tableKey}"></div>
             `;
+            prefillNextId(tableKey);
+        }
+
+        // Suggest the next free ID for news / articles (news10, news-10, ...)
+        async function prefillNextId(tableKey) {
+            const prefix = { news: 'news', pages: 'news-' }[tableKey];
+            if (!prefix) return;
+            const input = document.getElementById(`field-${tableKey}-add-id`);
+            if (!input) return;
+            const { data } = await supabaseClient.from(tableKey).select('id');
+            const nums = (data || []).map(r => parseInt((String(r.id).match(/\d+/) || [0])[0], 10));
+            input.value = prefix + (Math.max(0, ...nums) + 1);
         }
 
         function fieldHtml(f, value, tableKey, mode) {

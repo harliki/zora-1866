@@ -49,7 +49,7 @@
   <nav>
     <div class="nav-inner" id="nav-inner">
       <button class="nav-toggle" id="nav-toggle" aria-label="Меню">☰</button>
-      <div class="nav-item"><a href="index.html"class="active">Начало</a></div>
+      <div class="nav-item"><a href="index.html" class="active">Начало</a></div>
       <div class="nav-item"><a href="novini.html">Новини</a></div>
       <div class="nav-item"><a href="kalendar.html">Културен календар</a></div>
       <div class="nav-item"><a href="grupi.html">Групи и клубове</a></div>
@@ -117,7 +117,7 @@
           <span>📍</span>
           <p>
             <strong>Адрес</strong>
-              <p><strong>Адрес</strong>гр. Русе 7000, ул. „Духовно възраждане" № 1</p>
+          <p><strong>Адрес</strong>гр. Русе 7000, ул. „Духовно възраждане" № 1</p>
           </p>
         </div>
         <div class="contact-item">
@@ -139,16 +139,17 @@
     </div>
 
     <div class="footer-social-bottom">
-  <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank" rel="noopener noreferrer">
-    📘 Facebook
-  </a>
-  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
-    🅾 Instagram
-  </a>
-  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-    ▶️ Youtube
-  </a>
-</div>
+      <a href="https://www.facebook.com/profile.php?id=100056050612445&locale=bg_BG" target="_blank"
+        rel="noopener noreferrer">
+        📘 Facebook
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
+        🅾 Instagram
+      </a>
+      <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+        ▶️ Youtube
+      </a>
+    </div>
 
     <div class="footer-bottom">
       &copy; 2026 Читалище „Зора – 1866" – гр. Русе | Всички права запазени
@@ -192,7 +193,7 @@
     restartHero();
 
     // News slider
-    
+
 
     // Dark mode
     function toggleDark() {
@@ -213,127 +214,130 @@
   </script>
   < <script>
     // Language
-      const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
-      let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
+    const googCookie = document.cookie.split('; ').find(r => r.startsWith('googtrans='));
+    let currentLang = (googCookie && googCookie.includes('/en')) ? 'en' : 'bg';
 
-      function highlightActiveLang() {
-        document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
-        document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.14)';
+    function highlightActiveLang() {
+    document.getElementById('btn-bg').style.background = currentLang === 'bg' ? 'rgba(255,255,255,0.35)' :
+    'rgba(255,255,255,0.14)';
+    document.getElementById('btn-en').style.background = currentLang === 'en' ? 'rgba(255,255,255,0.35)' :
+    'rgba(255,255,255,0.14)';
+    }
+    highlightActiveLang();
+
+    function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+    pageLanguage: 'bg',
+    includedLanguages: 'en',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+    }
+
+    function setGoogTransCookie(value) {
+    document.cookie = 'googtrans=' + value + '; path=/';
+    document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
+    }
+
+    function setLang(lang) {
+    if (lang === 'en') {
+    setGoogTransCookie('/bg/en');
+    } else {
+    setGoogTransCookie('/bg/bg');
+    }
+    location.reload();
+    }
+    </script>
+
+
+
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, m => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
       }
-      highlightActiveLang();
 
-      function googleTranslateElementInit() {
-        new google.translate.TranslateElement({
-          pageLanguage: 'bg',
-          includedLanguages: 'en',
-          autoDisplay: false,
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-        }, 'google_translate_element');
+      // Parses "DD.MM.YYYY" into a timestamp for sorting. Returns 0 (oldest) if unparseable.
+      function parseBgDate(dateStr) {
+        if (!dateStr) return 0;
+        const parts = String(dateStr).trim().split('.');
+        if (parts.length !== 3) return 0;
+        const [day, month, year] = parts.map(Number);
+        if (!day || !month || !year) return 0;
+        return new Date(year, month - 1, day).getTime();
       }
 
-      function setGoogTransCookie(value) {
-        document.cookie = 'googtrans=' + value + '; path=/';
-        document.cookie = 'googtrans=' + value + '; path=/; domain=' + location.hostname;
-      }
-
-      function setLang(lang) {
-        if (lang === 'en') {
-          setGoogTransCookie('/bg/en');
-        } else {
-          setGoogTransCookie('/bg/bg');
+      function initSlider() {
+        const track = document.getElementById('nsTrack');
+        const dotsWrap = document.getElementById('nsDots');
+        if (!track) return;
+        const getVisible = () => window.innerWidth <= 560 ? 1 : window.innerWidth <= 860 ? 2 : 3;
+        const cards = track.querySelectorAll('.ns-card');
+        const total = cards.length;
+        if (total === 0) return;
+        let curNews = 0, nsTimer;
+        function maxPage() { return total - getVisible(); }
+        function buildDots() {
+          dotsWrap.innerHTML = '';
+          const pages = maxPage() + 1;
+          for (let i = 0; i < pages; i++) {
+            const b = document.createElement('button');
+            b.setAttribute('aria-label', 'Страница ' + (i + 1));
+            if (i === curNews) b.classList.add('active');
+            b.addEventListener('click', () => { goNews(i); restartNews(); });
+            dotsWrap.appendChild(b);
+          }
         }
-        location.reload();
+        function goNews(n) {
+          const max = maxPage();
+          curNews = (n + (max + 1)) % (max + 1);
+          const cardW = cards[0].getBoundingClientRect().width;
+          const gap = 22;
+          track.style.transform = `translateX(-${curNews * (cardW + gap)}px)`;
+          dotsWrap.querySelectorAll('button').forEach((b, i) =>
+            b.classList.toggle('active', i === curNews)
+          );
+        }
+        document.querySelector('.ns-prev').addEventListener('click', () => { goNews(curNews - 1); restartNews(); });
+        document.querySelector('.ns-next').addEventListener('click', () => { goNews(curNews + 1); restartNews(); });
+        function restartNews() {
+          clearInterval(nsTimer);
+          nsTimer = setInterval(() => goNews(curNews + 1), 4000);
+        }
+        buildDots();
+        window.addEventListener('resize', () => { buildDots(); goNews(curNews); });
+        restartNews();
       }
-  </script>
-  
-  
-  
-  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      async function initPage() {
+        const track = document.getElementById('nsTrack');
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>"']/g, m => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    }[m]));
-  }
+        const { data, error } = await sb.from('news').select('*');
 
-  // Parses "DD.MM.YYYY" into a timestamp for sorting. Returns 0 (oldest) if unparseable.
-  function parseBgDate(dateStr) {
-    if (!dateStr) return 0;
-    const parts = String(dateStr).trim().split('.');
-    if (parts.length !== 3) return 0;
-    const [day, month, year] = parts.map(Number);
-    if (!day || !month || !year) return 0;
-    return new Date(year, month - 1, day).getTime();
-  }
+        if (error) {
+          console.error('Supabase news fetch error:', error);
+          return;
+        }
+        if (!data || data.length === 0) return;
 
-  function initSlider() {
-    const track = document.getElementById('nsTrack');
-    const dotsWrap = document.getElementById('nsDots');
-    if (!track) return;
-    const getVisible = () => window.innerWidth <= 560 ? 1 : window.innerWidth <= 860 ? 2 : 3;
-    const cards = track.querySelectorAll('.ns-card');
-    const total = cards.length;
-    if (total === 0) return;
-    let curNews = 0, nsTimer;
-    function maxPage() { return total - getVisible(); }
-    function buildDots() {
-      dotsWrap.innerHTML = '';
-      const pages = maxPage() + 1;
-      for (let i = 0; i < pages; i++) {
-        const b = document.createElement('button');
-        b.setAttribute('aria-label', 'Страница ' + (i + 1));
-        if (i === curNews) b.classList.add('active');
-        b.addEventListener('click', () => { goNews(i); restartNews(); });
-        dotsWrap.appendChild(b);
-      }
-    }
-    function goNews(n) {
-      const max = maxPage();
-      curNews = (n + (max + 1)) % (max + 1);
-      const cardW = cards[0].getBoundingClientRect().width;
-      const gap = 22;
-      track.style.transform = `translateX(-${curNews * (cardW + gap)}px)`;
-      dotsWrap.querySelectorAll('button').forEach((b, i) =>
-        b.classList.toggle('active', i === curNews)
-      );
-    }
-    document.querySelector('.ns-prev').addEventListener('click', () => { goNews(curNews - 1); restartNews(); });
-    document.querySelector('.ns-next').addEventListener('click', () => { goNews(curNews + 1); restartNews(); });
-    function restartNews() {
-      clearInterval(nsTimer);
-      nsTimer = setInterval(() => goNews(curNews + 1), 4000);
-    }
-    buildDots();
-    window.addEventListener('resize', () => { buildDots(); goNews(curNews); });
-    restartNews();
-  }
+        // Newest first, same sort as novini.html
+        const sorted = [...data].sort((a, b) => parseBgDate(b.date) - parseBgDate(a.date));
 
-  async function initPage() {
-    const track = document.getElementById('nsTrack');
-
-    const { data, error } = await sb.from('news').select('*');
-
-    if (error) {
-      console.error('Supabase news fetch error:', error);
-      return;
-    }
-    if (!data || data.length === 0) return;
-
-    // Newest first, same sort as novini.html
-    const sorted = [...data].sort((a, b) => parseBgDate(b.date) - parseBgDate(a.date));
-
-    sorted.forEach((item, i) => {
-      const a = document.createElement('a');
-      a.classList.add('ns-card');
-      a.href = `news-${i + 1}.html`;
-      a.innerHTML = `
+        sorted.forEach((item, i) => {
+          const a = document.createElement('a');
+          a.classList.add('ns-card');
+          // One shared article page; the item's own id picks the article
+          a.href = `article.html?id=${encodeURIComponent(item.id)}`;
+          a.innerHTML = `
         <div class="ns-thumb"><img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy"></div>
         <div class="ns-body">
           <span class="ns-date">${escapeHtml(item.date)}</span>
@@ -341,14 +345,14 @@
           <p>${escapeHtml(item.description)}</p>
         </div>
       `;
-      track.appendChild(a);
-    });
+          track.appendChild(a);
+        });
 
-    initSlider();
-  }
+        initSlider();
+      }
 
-  window.onload = initPage;
-</script>
+      window.onload = initPage;
+    </script>
 </body>
 
 </html>

@@ -43,7 +43,7 @@
 
       <div class="nav-item"><a href="index.html">Начало</a></div>
       <div class="nav-item"><a href="novini.html">Новини</a></div>
-      <div class="nav-item"><a href="kalendar.html"class="active">Културен календар</a></div>
+      <div class="nav-item"><a href="kalendar.html" class="active">Културен календар</a></div>
       <div class="nav-item"><a href="grupi.html">Групи и клубове</a></div>
       <div class="nav-item"><a href="ekip.html">Екип</a></div>
       <div class="nav-item"><a href="galeriya.html">Галерия</a></div>
@@ -62,6 +62,12 @@
     <!-- EMPTY timeline container (JS will fill this) -->
     <div class="timeline" id="events-container">
       <p class="tl-loading">Зареждане на събития…</p>
+    </div>
+
+    <!-- Past events (filled by JS, hidden if there are none) -->
+    <div id="past-section" style="display:none; margin-top:60px;">
+      <h2 class="section-title">Минали събития</h2>
+      <div class="timeline" id="past-container" style="opacity:.65;"></div>
     </div>
   </div>
 
@@ -212,10 +218,10 @@
 
   <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://vyhkqixgpfnipyyoqgwd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_8D6lVLe4Ik0AuEtYp0_adw__kYZTnjX';
     const { createClient } = supabase; // grabs createClient off the global `supabase` object
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY); // renamed so it doesn't clash with the global
 
@@ -231,46 +237,80 @@
       }[c]));
     }
 
+    // Reads dates written as DD.MM.YYYY (also D.M.YYYY, DD/MM/YYYY, DD-MM-YYYY)
+    // or ISO YYYY-MM-DD. Returns a Date, or null if it can't be understood.
+    function parseDate(str) {
+      const s = String(str ?? '').trim();
+      let m = s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+      m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+      return null;
+    }
+
     function formatDate(dateStr) {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return escapeHtml(dateStr);
+      const d = parseDate(dateStr);
+      if (!d) return escapeHtml(dateStr); // unknown format: show exactly as typed
       return d.toLocaleDateString('bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    function initPage() {
-      const container = document.getElementById("events-container");
+    function renderEvent(ev) {
+      const div = document.createElement('div');
+      div.classList.add('tl-item');
+      div.innerHTML = `
+        <div class="tl-date">${formatDate(ev.date)}</div>
+        <h3>${escapeHtml(ev.title)}</h3>
+        <p>${escapeHtml(ev.description)}</p>
+      `;
+      return div;
+    }
 
-      sb
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true })
-        .then(({ data: events, error }) => {
-          if (error) {
-            console.error("Error loading events:", error);
-            container.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на събитията. Опитайте по-късно.</p>';
-            return;
-          }
+    async function initPage() {
+      const container = document.getElementById('events-container');
+      const pastSection = document.getElementById('past-section');
+      const pastContainer = document.getElementById('past-container');
 
-          if (!events || events.length === 0) {
-            container.innerHTML = '<p class="tl-empty">В момента няма предстоящи събития.</p>';
-            return;
-          }
+      // No .order() here: "date" is text, so the database would sort it alphabetically
+      // ("15.03" before "02.11"). We sort by real dates below instead.
+      const { data: events, error } = await sb.from('events').select('*');
 
-          container.innerHTML = '';
+      if (error) {
+        console.error('Error loading events:', error);
+        container.innerHTML = '<p class="tl-error">Възникна грешка при зареждане на събитията. Опитайте по-късно.</p>';
+        return;
+      }
 
-          events.forEach(ev => {
-            const div = document.createElement("div");
-            div.classList.add("tl-item");
+      if (!events || events.length === 0) {
+        container.innerHTML = '<p class="tl-empty">В момента няма предстоящи събития.</p>';
+        return;
+      }
 
-            div.innerHTML = `
-              <div class="tl-date">${formatDate(ev.date)}</div>
-              <h3>${escapeHtml(ev.title)}</h3>
-              <p>${escapeHtml(ev.description)}</p>
-            `;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-            container.appendChild(div);
-          });
-        });
+      const upcoming = [];
+      const past = [];
+      events.forEach(ev => {
+        const d = parseDate(ev.date);
+        if (d && d < today) past.push({ ev, d });
+        else upcoming.push({ ev, d }); // unreadable dates stay visible, at the end
+      });
+
+      const far = Number.MAX_SAFE_INTEGER;
+      upcoming.sort((a, b) => (a.d ? a.d.getTime() : far) - (b.d ? b.d.getTime() : far)); // soonest first
+      past.sort((a, b) => b.d - a.d);                                                    // most recent first
+
+      container.innerHTML = '';
+      if (upcoming.length === 0) {
+        container.innerHTML = '<p class="tl-empty">В момента няма предстоящи събития.</p>';
+      } else {
+        upcoming.forEach(({ ev }) => container.appendChild(renderEvent(ev)));
+      }
+
+      if (past.length > 0) {
+        past.forEach(({ ev }) => pastContainer.appendChild(renderEvent(ev)));
+        pastSection.style.display = '';
+      }
     }
 
     window.addEventListener('load', initPage);
