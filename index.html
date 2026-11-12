@@ -225,7 +225,6 @@
     document.getElementById('next-btn').addEventListener('click', () => { goTo(cur + 1); restartHero(); });
     dots.forEach((d, i) => d.addEventListener('click', () => { goTo(i); restartHero(); }));
     restartHero();
-    loadHeroSlides();
 
     // News slider
 
@@ -354,6 +353,7 @@
       }
 
       async function initPage() {
+        loadHeroSlides(); // слайдер от таблица hero_slides (sb вече е създаден)
         const track = document.getElementById('nsTrack');
 
         const { data, error } = await sb.from('news').select('*');
