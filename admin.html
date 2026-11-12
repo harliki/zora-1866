@@ -299,6 +299,50 @@
             border: 1px solid #e8e0d0;
         }
 
+        .remove-media {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #c00;
+            text-transform: none;
+            letter-spacing: 0;
+            cursor: pointer;
+        }
+
+        .remove-media input {
+            margin: 0;
+        }
+
+        .file-current {
+            display: inline-block;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--red-dark);
+            word-break: break-all;
+        }
+
+        .draft-badge {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--gold-light);
+            color: #2b2200;
+            border-radius: 10px;
+            padding: 2px 8px;
+            margin-left: 6px;
+        }
+
+        .draft-note {
+            font-size: 13px;
+            background: var(--cream);
+            border-left: 3px solid var(--gold);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
         .row {
             display: flex;
             justify-content: flex-end;
@@ -525,6 +569,14 @@
             color: #e8e8e8;
         }
 
+        body.dark-mode .draft-note {
+            background: #252525;
+        }
+
+        body.dark-mode .file-current {
+            color: var(--letter-color);
+        }
+
         body.dark-mode .thumb,
         body.dark-mode .gallery-item img {
             border-color: #444;
@@ -627,6 +679,13 @@
                     { name: 'link', label: 'Линк', type: 'text' },
                 ]
             },
+            hero_slides: {
+                label: 'Начална – снимки',
+                fields: [
+                    { name: 'id', label: 'ID (slide1, slide2, … – определя реда)', type: 'text', pk: true },
+                    { name: 'picture', label: 'Снимка', type: 'image' },
+                ]
+            },
             news: {
                 label: 'Новини',
                 fields: [
@@ -639,17 +698,21 @@
             },
             pages: {
                 label: 'Статии',
+                // Снимката на статията се взима автоматично от новината със същия номер.
                 fields: [
                     { name: 'id', label: 'ID', type: 'text', pk: true },
                     { name: 'date', label: 'Дата', type: 'text' },
                     { name: 'title', label: 'Заглавие', type: 'text' },
-                    { name: 'picture', label: 'Снимка', type: 'image' },
                     { name: 'description', label: 'Описание', type: 'textarea' },
+                    { name: 'file', label: 'Прикачен файл', type: 'file' },
                 ]
             },
         };
 
         const rowCache = {}; // tableKey -> { pkValue: rowObject }
+        const draftCache = {}; // tableKey -> { draftId: draftRow }
+        const currentDraft = {}; // tableKey -> id на чернова, заредена във формата за добавяне
+        const DRAFTS_TABLE = 'drafts';
 
         // ---------- Auth ----------
         async function checkLogin() {
@@ -728,6 +791,10 @@
                     <h2>Добави ново — ${cfg.label}</h2>
                     <div id="add-form-${tableKey}"></div>
                 </div>
+                <div class="card" id="drafts-card-${tableKey}" style="display:none;">
+                    <h2>Чернови</h2>
+                    <ul class="item-list" id="drafts-${tableKey}"></ul>
+                </div>
                 <div class="card">
                     <h2>Съществуващи записи</h2>
                     <ul class="item-list" id="list-${tableKey}"></ul>
@@ -735,23 +802,32 @@
             `;
             renderAddForm(tableKey);
             loadRows(tableKey);
+            loadDrafts(tableKey);
         }
 
-        function renderAddForm(tableKey) {
+        function renderAddForm(tableKey, values) {
             const cfg = TABLES[tableKey];
             const container = document.getElementById(`add-form-${tableKey}`);
-            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, '', tableKey, 'add')).join('');
+            values = values || {};
+            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, values[f.name], tableKey, 'add', values)).join('');
+            const note = currentDraft[tableKey]
+                ? '<div class="draft-note">Редактираш чернова. Когато натиснеш „Добави“, тя се публикува и черновата се изтрива.</div>'
+                : '';
             container.innerHTML = `
+                ${note}
                 ${fieldsHtml}
-                <div class="row"><button class="primary" onclick="submitAdd('${tableKey}')">Добави</button></div>
+                <div class="row">
+                    <button class="secondary" onclick="saveDraft('${tableKey}')">Запази като чернова</button>
+                    <button class="primary" onclick="submitAdd('${tableKey}')">Добави</button>
+                </div>
                 <div class="status" id="add-status-${tableKey}"></div>
             `;
-            prefillNextId(tableKey);
+            if (!values.id) prefillNextId(tableKey);
         }
 
         // Suggest the next free ID for news / articles (news10, news-10, ...)
         async function prefillNextId(tableKey) {
-            const prefix = { news: 'news', pages: 'news-' }[tableKey];
+            const prefix = { news: 'news', pages: 'news-', hero_slides: 'slide' }[tableKey];
             if (!prefix) return;
             const input = document.getElementById(`field-${tableKey}-add-id`);
             if (!input) return;
@@ -760,31 +836,154 @@
             input.value = prefix + (Math.max(0, ...nums) + 1);
         }
 
-        function fieldHtml(f, value, tableKey, mode) {
+        function fileLabel(url, name) {
+            if (name) return name;
+            try { return decodeURIComponent(String(url).split('/').pop().replace(/^\d+-/, '')); }
+            catch (e) { return String(url); }
+        }
+
+        function fieldHtml(f, value, tableKey, mode, row) {
             const id = `field-${tableKey}-${mode}-${f.name}`;
             if (f.type === 'textarea') {
                 return `<label>${f.label}</label><textarea id="${id}">${escapeHtml(value || '')}</textarea>`;
             }
             if (f.type === 'image') {
                 const preview = value ? `<img src="${escapeAttr(value)}" class="thumb">` : '';
-                return `<label>${f.label}</label>${preview}<input type="file" accept="image/*" id="${id}" data-current="${escapeAttr(value || '')}">`;
+                const remove = value
+                    ? `<label class="remove-media"><input type="checkbox" id="${id}-remove"> Премахни снимката (ще остане празно място)</label>`
+                    : '';
+                return `<label>${f.label}</label>${preview}<input type="file" accept="image/*" id="${id}" data-current="${escapeAttr(value || '')}">${remove}`;
+            }
+            if (f.type === 'file') {
+                const name = row ? row[f.name + '_name'] : '';
+                const current = value
+                    ? `<a class="file-current" href="${escapeAttr(value)}" target="_blank" rel="noopener">📎 ${escapeHtml(fileLabel(value, name))}</a>
+                       <label class="remove-media"><input type="checkbox" id="${id}-remove"> Премахни файла</label>`
+                    : '';
+                return `<label>${f.label}</label>${current}<input type="file" id="${id}" data-current="${escapeAttr(value || '')}" data-current-name="${escapeAttr(name || '')}">`;
             }
             const disabled = (f.pk && mode.startsWith('edit')) ? 'disabled' : '';
             return `<label>${f.label}</label><input type="text" id="${id}" value="${escapeAttr(value || '')}" ${disabled}>`;
         }
 
-        async function uploadIfFile(tableKey, field, mode) {
+        function safeFileName(name) {
+            const dot = name.lastIndexOf('.');
+            const ext = dot > -1 ? name.slice(dot).replace(/[^A-Za-z0-9.]/g, '') : '';
+            const base = (dot > -1 ? name.slice(0, dot) : name).replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40);
+            return base + ext;
+        }
+
+        // Връща { url, name } за поле от тип image/file:
+        // премахната -> null, нов файл -> качва се, иначе остава текущата стойност.
+        async function resolveMedia(tableKey, field, mode) {
             const input = document.getElementById(`field-${tableKey}-${mode}-${field.name}`);
-            if (!input) return null;
+            if (!input) return { url: null, name: null, touched: false };
+            const removeBox = document.getElementById(`field-${tableKey}-${mode}-${field.name}-remove`);
             if (input.files && input.files.length > 0) {
                 const file = input.files[0];
-                const path = `${tableKey}/${Date.now()}-${file.name}`;
+                const path = `${tableKey}/${Date.now()}-${safeFileName(file.name)}`;
                 const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, file);
                 if (error) throw error;
                 const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-                return data.publicUrl;
+                return { url: data.publicUrl, name: file.name, touched: true };
             }
-            return input.dataset.current || null;
+            if (removeBox && removeBox.checked) return { url: null, name: null, touched: true };
+            return { url: input.dataset.current || null, name: input.dataset.currentName || null, touched: false };
+        }
+
+        // Събира стойностите от формата. forDraft=true -> без проверка за ID.
+        async function collectValues(tableKey, mode, skipPk) {
+            const cfg = TABLES[tableKey];
+            const out = {};
+            for (const f of cfg.fields) {
+                if (skipPk && f.pk) continue;
+                if (f.type === 'image' || f.type === 'file') {
+                    const m = await resolveMedia(tableKey, f, mode);
+                    // Колоната за файл се праща само когато има стойност или е променена,
+                    // за да не се чупи запазването, ако колоната още не съществува.
+                    if (f.type === 'file' && !m.url && !m.touched) continue;
+                    out[f.name] = m.url;
+                    if (f.type === 'file') out[f.name + '_name'] = m.name;
+                } else {
+                    const el = document.getElementById(`field-${tableKey}-${mode}-${f.name}`);
+                    out[f.name] = el.value.trim();
+                }
+            }
+            return out;
+        }
+
+        // ---------- Чернови ----------
+        async function loadDrafts(tableKey) {
+            const card = document.getElementById(`drafts-card-${tableKey}`);
+            const list = document.getElementById(`drafts-${tableKey}`);
+            const { data, error } = await supabaseClient.from(DRAFTS_TABLE).select('*').eq('table_name', tableKey).order('created_at', { ascending: false });
+            draftCache[tableKey] = {};
+            if (error) {
+                console.warn('Drafts:', error.message);
+                card.style.display = 'block';
+                list.innerHTML = '<li>Черновите не са налични – създай таблицата „drafts“ (виж supabase-setup.sql).</li>';
+                return;
+            }
+            if (!data || data.length === 0) { card.style.display = 'none'; list.innerHTML = ''; return; }
+            card.style.display = 'block';
+            list.innerHTML = data.map(d => {
+                draftCache[tableKey][d.id] = d;
+                const v = d.data || {};
+                const title = v.title || v.name || v.id || '(без заглавие)';
+                const when = d.created_at ? new Date(d.created_at).toLocaleString('bg-BG') : '';
+                return `
+                    <li class="row-item">
+                        <div class="row-summary">
+                            <div><strong>${escapeHtml(title)}</strong><span class="draft-badge">чернова</span> <span class="row-id">${escapeHtml(when)}</span></div>
+                            <div class="row-actions">
+                                <button onclick="openDraft('${tableKey}', '${escapeAttr(d.id)}')">Продължи</button>
+                                <button class="del-btn" onclick="deleteDraft('${tableKey}', '${escapeAttr(d.id)}')">Изтрий</button>
+                            </div>
+                        </div>
+                    </li>`;
+            }).join('');
+        }
+
+        async function saveDraft(tableKey) {
+            const status = document.getElementById(`add-status-${tableKey}`);
+            status.textContent = 'Запазване на чернова...';
+            status.className = 'status';
+            try {
+                const values = await collectValues(tableKey, 'add', false);
+                const payload = { table_name: tableKey, data: values };
+                let res;
+                if (currentDraft[tableKey]) {
+                    res = await supabaseClient.from(DRAFTS_TABLE).update({ data: values }).eq('id', currentDraft[tableKey]).select();
+                } else {
+                    res = await supabaseClient.from(DRAFTS_TABLE).insert(payload).select();
+                }
+                if (res.error) throw res.error;
+                currentDraft[tableKey] = null;
+                renderAddForm(tableKey);
+                loadDrafts(tableKey);
+                const st = document.getElementById(`add-status-${tableKey}`);
+                st.textContent = 'Черновата е запазена.';
+                st.className = 'status ok';
+            } catch (err) {
+                status.textContent = 'Грешка: ' + err.message;
+                status.className = 'status err';
+            }
+        }
+
+        function openDraft(tableKey, draftId) {
+            const d = draftCache[tableKey][draftId];
+            if (!d) return;
+            currentDraft[tableKey] = draftId;
+            renderAddForm(tableKey, d.data || {});
+            document.getElementById(`add-form-${tableKey}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function deleteDraft(tableKey, draftId) {
+            if (!confirm('Да изтрия ли тази чернова?')) return;
+            const { error } = await supabaseClient.from(DRAFTS_TABLE).delete().eq('id', draftId);
+            if (error) { alert('Грешка: ' + error.message); return; }
+            if (currentDraft[tableKey] === draftId) { currentDraft[tableKey] = null; renderAddForm(tableKey); }
+            loadDrafts(tableKey);
         }
 
         async function submitAdd(tableKey) {
@@ -793,15 +992,7 @@
             status.textContent = 'Запазване...';
             status.className = 'status';
             try {
-                const row = {};
-                for (const f of cfg.fields) {
-                    if (f.type === 'image') {
-                        row[f.name] = await uploadIfFile(tableKey, f, 'add');
-                    } else {
-                        const el = document.getElementById(`field-${tableKey}-add-${f.name}`);
-                        row[f.name] = el.value.trim();
-                    }
-                }
+                const row = await collectValues(tableKey, 'add', false);
                 const pkField = cfg.fields.find(f => f.pk);
                 if (pkField && !row[pkField.name]) {
                     status.textContent = 'ID е задължителен.';
@@ -810,10 +1001,16 @@
                 }
                 const { error } = await supabaseClient.from(tableKey).insert(row);
                 if (error) throw error;
-                status.textContent = 'Добавено успешно.';
-                status.className = 'status ok';
+                if (currentDraft[tableKey]) {
+                    await supabaseClient.from(DRAFTS_TABLE).delete().eq('id', currentDraft[tableKey]);
+                    currentDraft[tableKey] = null;
+                }
                 renderAddForm(tableKey);
+                const st = document.getElementById(`add-status-${tableKey}`);
+                st.textContent = 'Добавено успешно.';
+                st.className = 'status ok';
                 loadRows(tableKey);
+                loadDrafts(tableKey);
             } catch (err) {
                 status.textContent = 'Грешка: ' + err.message;
                 status.className = 'status err';
@@ -865,7 +1062,7 @@
             }
             const row = rowCache[tableKey][pk];
             const mode = `edit-${pk}`;
-            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, row[f.name], tableKey, mode)).join('');
+            const fieldsHtml = cfg.fields.map(f => fieldHtml(f, row[f.name], tableKey, mode, row)).join('');
             area.innerHTML = `
                 ${fieldsHtml}
                 <div class="row">
@@ -884,16 +1081,7 @@
             status.textContent = 'Запазване...';
             status.className = 'status';
             try {
-                const updates = {};
-                for (const f of cfg.fields) {
-                    if (f.pk) continue;
-                    if (f.type === 'image') {
-                        updates[f.name] = await uploadIfFile(tableKey, f, mode);
-                    } else {
-                        const el = document.getElementById(`field-${tableKey}-${mode}-${f.name}`);
-                        updates[f.name] = el.value.trim();
-                    }
-                }
+                const updates = await collectValues(tableKey, mode, true);
                 const pkField = cfg.fields.find(f => f.pk);
                 const eqCol = pkField ? pkField.name : 'id';
                 const { error } = await supabaseClient.from(tableKey).update(updates).eq(eqCol, pk);
