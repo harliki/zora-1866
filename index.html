@@ -171,9 +171,43 @@
     });
 
     // Hero slider
-    const slides = document.querySelectorAll('.slide');
-    const dots = document.querySelectorAll('#dots button');
+    let slides = document.querySelectorAll('.slide');
+    let dots = document.querySelectorAll('#dots button');
     let cur = 0, heroTimer;
+
+    // Снимките на слайдера се управляват от админ панела (таблица "hero_slides").
+    // Ако таблицата е празна или недостъпна, остават стандартните снимки.
+    async function loadHeroSlides() {
+      try {
+        const { data, error } = await sb.from('hero_slides').select('*');
+        if (error || !data || data.length === 0) return;
+        const num = id => parseInt((String(id).match(/\d+/) || [0])[0], 10);
+        const sorted = [...data].sort((a, b) => num(a.id) - num(b.id));
+        const hero = document.getElementById('hero');
+        const dotsEl = document.getElementById('dots');
+        hero.querySelectorAll('.slide').forEach(el => el.remove());
+        dotsEl.innerHTML = '';
+        const arrows = hero.querySelector('.slider-arrows');
+        sorted.forEach((item, i) => {
+          const div = document.createElement('div');
+          div.className = 'slide' + (item.picture ? '' : ' slide-empty') + (i === 0 ? ' active' : '');
+          if (item.picture) {
+            const img = document.createElement('img');
+            img.src = item.picture;
+            img.alt = 'Slide ' + (i + 1);
+            div.appendChild(img);
+          }
+          hero.insertBefore(div, arrows);
+          const b = document.createElement('button');
+          if (i === 0) b.className = 'active';
+          dotsEl.appendChild(b);
+        });
+        slides = hero.querySelectorAll('.slide');
+        dots = dotsEl.querySelectorAll('button');
+        cur = 0;
+        dots.forEach((d, i) => d.addEventListener('click', () => { goTo(i); restartHero(); }));
+      } catch (e) { console.warn('hero_slides', e); }
+    }
 
     function goTo(n) {
       slides[cur].classList.remove('active');
@@ -319,6 +353,7 @@
       }
 
       async function initPage() {
+        loadHeroSlides(); // слайдер от таблица hero_slides (sb вече е създаден)
         const track = document.getElementById('nsTrack');
 
         const { data, error } = await sb.from('news').select('*');
@@ -338,7 +373,7 @@
           // One shared article page; the item's own id picks the article
           a.href = `article.html?id=${encodeURIComponent(item.id)}`;
           a.innerHTML = `
-        <div class="ns-thumb"><img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy"></div>
+        <div class="ns-thumb">${item.picture ? `<img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}" loading="lazy">` : ''}</div>
         <div class="ns-body">
           <span class="ns-date">${escapeHtml(item.date)}</span>
           <h3>${escapeHtml(item.title)}</h3>

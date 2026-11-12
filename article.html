@@ -283,8 +283,11 @@
       // Title, date and picture: prefer the full article row, fall back to the news row
       const title = (full && full.title) || (news && news.title) || '';
       const date = (full && full.date) || (news && news.date) || '';
-      const picture = (full && full.picture) || (news && news.picture) || '';
+      // Снимката се взима винаги от новината
+      const picture = (news && news.picture) || '';
       const body = (full && full.description) || (news && news.description) || '';
+      const fileUrl = (full && full.file) || '';
+      const fileName = (full && full.file_name) || (fileUrl ? decodeURIComponent(fileUrl.split('/').pop().replace(/^\d+-/, '')) : '');
 
       if (breadcrumbEl) breadcrumbEl.textContent = ' / ' + title;
       document.title = title + ' – Новини – Възрожденско читалище „Зора – 1866“';
@@ -292,8 +295,11 @@
       articleEl.innerHTML = `
         <h1 class="article-title">${escapeHtml(title)}</h1>
         <p class="article-date">${escapeHtml(formatDate(date))}</p>
-        ${picture ? `<img class="article-image" src="${escapeHtml(picture)}" alt="${escapeHtml(title)}">` : ''}
+        ${picture
+          ? `<img class="article-image" src="${escapeHtml(picture)}" alt="${escapeHtml(title)}">`
+          : '<div class="article-image article-image-empty"></div>'}
         <div class="article-description">${formatBody(body)}</div>
+        ${fileUrl ? `<a class="article-file" href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener">📎 ${escapeHtml(fileName)}</a>` : ''}
       `;
       statusEl.textContent = '';
     }

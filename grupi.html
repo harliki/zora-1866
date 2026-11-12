@@ -220,7 +220,7 @@
       a.classList.add('group-card');
       a.href = `#${item.link}`;
       a.innerHTML = `
-        <div class="gc-photo"><img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}"></div>
+        <div class="gc-photo">${item.picture ? `<img src="${escapeHtml(item.picture)}" alt="${escapeHtml(item.title)}">` : ''}</div>
         <div class="gc-body">
           <h3>${escapeHtml(item.title)}</h3>
           <p>${escapeHtml(item.description)}</p>
